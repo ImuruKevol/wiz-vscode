@@ -1136,7 +1136,339 @@ function activate(context) {
 
         // Deprecated (kept for compatibility)
         ['wizExplorer.switchAppFile', async () => {}],
-        ['wizExplorer.toggleAppFile', async () => {}]
+        ['wizExplorer.toggleAppFile', async () => {}],
+
+        // ==================== Command Palette Commands ====================
+        
+        // Direct build commands (without menu selection)
+        ['wizExplorer.normalBuild', () => {
+            if (!currentProject) {
+                vscode.window.showErrorMessage('프로젝트가 선택되지 않았습니다.');
+                return;
+            }
+            triggerBuild(false);
+        }],
+
+        ['wizExplorer.cleanBuild', () => {
+            if (!currentProject) {
+                vscode.window.showErrorMessage('프로젝트가 선택되지 않았습니다.');
+                return;
+            }
+            triggerBuild(true);
+        }],
+
+        // Show build output
+        ['wizExplorer.showBuildOutput', () => {
+            buildOutputChannel.show(true);
+        }],
+
+        // Export current project directly
+        ['wizExplorer.exportCurrentProject', async () => {
+            if (!currentProject) {
+                vscode.window.showErrorMessage('프로젝트가 선택되지 않았습니다.');
+                return;
+            }
+
+            const exportsPath = path.join(workspaceRoot, 'exports');
+            if (!fs.existsSync(exportsPath)) {
+                fs.mkdirSync(exportsPath, { recursive: true });
+            }
+
+            const outputPath = path.join(exportsPath, currentProject);
+
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: `프로젝트 '${currentProject}' 내보내는 중...`,
+                    cancellable: false
+                }, async () => {
+                    const command = `wiz project export --project=${currentProject} --output="${outputPath}"`;
+                    buildOutputChannel.appendLine(`[Export] ${command}`);
+                    buildOutputChannel.show(true);
+
+                    await exec(command, { cwd: workspaceRoot });
+                    buildOutputChannel.appendLine(`[Export] 완료: ${outputPath}`);
+                });
+
+                vscode.window.showInformationMessage(`프로젝트 '${currentProject}'가 exports 폴더로 내보내졌습니다.`);
+                fileExplorerProvider.refresh();
+            } catch (err) {
+                buildOutputChannel.appendLine(`[Export] 실패: ${err.message}`);
+                vscode.window.showErrorMessage(`프로젝트 내보내기 실패: ${err.message}`);
+            }
+        }],
+
+        // Import project file (.wizproject)
+        ['wizExplorer.importProject', async () => {
+            if (!workspaceRoot) {
+                vscode.window.showInformationMessage('워크스페이스가 열려있지 않습니다.');
+                return;
+            }
+
+            const projectBasePath = path.join(workspaceRoot, 'project');
+            if (!fs.existsSync(projectBasePath)) {
+                fs.mkdirSync(projectBasePath, { recursive: true });
+            }
+
+            const fileUris = await vscode.window.showOpenDialog({
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                filters: { 'Wiz Project': ['wizproject'] },
+                title: 'Wiz 프로젝트 파일 선택'
+            });
+
+            if (!fileUris || fileUris.length === 0) return;
+            const filePath = fileUris[0].fsPath;
+
+            const projectName = await vscode.window.showInputBox({
+                title: '새 프로젝트 이름(Namespace) 입력',
+                prompt: '영문 소문자와 숫자만 허용됩니다.',
+                value: path.basename(filePath, '.wizproject'),
+                validateInput: (value) => {
+                    if (!/^[a-z0-9]+$/.test(value)) {
+                        return '영문 소문자와 숫자만 허용됩니다.';
+                    }
+                    if (fs.existsSync(path.join(projectBasePath, value))) {
+                        return '이미 존재하는 프로젝트 이름입니다.';
+                    }
+                    return null;
+                }
+            });
+
+            if (!projectName) return;
+
+            const targetPath = path.join(projectBasePath, projectName);
+
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: `프로젝트 '${projectName}' 가져오는 중...`,
+                    cancellable: false
+                }, async () => {
+                    fs.mkdirSync(targetPath, { recursive: true });
+                    const command = `unzip -o "${filePath}" -d "${targetPath}"`;
+                    buildOutputChannel.appendLine(`[Import] ${command}`);
+                    buildOutputChannel.show(true);
+                    await exec(command);
+                    buildOutputChannel.appendLine(`[Import] 완료: ${targetPath}`);
+                });
+
+                const choice = await vscode.window.showInformationMessage(
+                    `프로젝트 '${projectName}'를 성공적으로 가져왔습니다. 전환하시겠습니까?`,
+                    '예', '아니오'
+                );
+
+                if (choice === '예') {
+                    currentProject = projectName;
+                    updateProjectRoot();
+                }
+            } catch (err) {
+                if (fs.existsSync(targetPath)) {
+                    fs.rmSync(targetPath, { recursive: true, force: true });
+                }
+                buildOutputChannel.appendLine(`[Import] 실패: ${err.message}`);
+                vscode.window.showErrorMessage(`프로젝트 가져오기 실패: ${err.message}`);
+            }
+        }],
+
+        // Go to App (search by name)
+        ['wizExplorer.goToApp', async () => {
+            if (!fileExplorerProvider.workspaceRoot) {
+                vscode.window.showErrorMessage('프로젝트가 선택되지 않았습니다.');
+                return;
+            }
+
+            const srcPath = path.join(fileExplorerProvider.workspaceRoot, 'src');
+            if (!fs.existsSync(srcPath)) return;
+
+            const apps = [];
+            
+            // Helper to scan directory for apps
+            function scanApps(dirPath, category) {
+                if (!fs.existsSync(dirPath)) return;
+                
+                try {
+                    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+                    for (const entry of entries) {
+                        if (entry.isDirectory()) {
+                            const appJsonPath = path.join(dirPath, entry.name, 'app.json');
+                            if (fs.existsSync(appJsonPath)) {
+                                try {
+                                    const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+                                    apps.push({
+                                        label: `$(${getAppIcon(appJson.mode || category)}) ${appJson.title || entry.name}`,
+                                        description: appJson.id || entry.name,
+                                        detail: category,
+                                        appPath: path.join(dirPath, entry.name),
+                                        mode: appJson.mode || category
+                                    });
+                                } catch (e) { /* skip invalid json */ }
+                            }
+                        }
+                    }
+                } catch (e) { /* skip inaccessible dirs */ }
+            }
+
+            function getAppIcon(mode) {
+                const icons = {
+                    'page': 'browser',
+                    'component': 'symbol-class',
+                    'widget': 'symbol-snippet',
+                    'layout': 'layout',
+                    'route': 'circuit-board',
+                    'portal': 'package'
+                };
+                return icons[mode] || 'file-code';
+            }
+
+            // Scan standard app directories
+            ['page', 'component', 'widget', 'layout'].forEach(type => {
+                scanApps(path.join(srcPath, type), type);
+            });
+
+            // Scan route
+            scanApps(path.join(srcPath, 'route'), 'route');
+
+            // Scan portal packages
+            const portalPath = path.join(srcPath, 'portal');
+            if (fs.existsSync(portalPath)) {
+                try {
+                    const packages = fs.readdirSync(portalPath, { withFileTypes: true });
+                    for (const pkg of packages) {
+                        if (pkg.isDirectory()) {
+                            scanApps(path.join(portalPath, pkg.name, 'app'), `portal/${pkg.name}`);
+                            scanApps(path.join(portalPath, pkg.name, 'route'), `portal/${pkg.name}/route`);
+                        }
+                    }
+                } catch (e) { /* skip */ }
+            }
+
+            if (apps.length === 0) {
+                vscode.window.showInformationMessage('앱이 없습니다.');
+                return;
+            }
+
+            const selected = await vscode.window.showQuickPick(apps, {
+                placeHolder: '앱 이름으로 검색',
+                matchOnDescription: true,
+                matchOnDetail: true
+            });
+
+            if (selected) {
+                appEditorProvider.openInfoEditor(selected.appPath, appContextListener);
+            }
+        }],
+
+        // Open App Info for current file
+        ['wizExplorer.openAppInfo', () => {
+            const dirPath = resolveCurrentAppPath();
+            if (!dirPath) {
+                vscode.window.showWarningMessage('현재 열린 앱 파일이 없습니다.');
+                return;
+            }
+            appEditorProvider.openInfoEditor(dirPath, appContextListener);
+        }],
+
+        // Copy template of current app
+        ['wizExplorer.copyCurrentTemplate', async () => {
+            const dirPath = resolveCurrentAppPath();
+            if (!dirPath) {
+                vscode.window.showWarningMessage('현재 열린 앱 파일이 없습니다.');
+                return;
+            }
+
+            const appJsonPath = path.join(dirPath, 'app.json');
+            if (!fs.existsSync(appJsonPath)) {
+                vscode.window.showErrorMessage('app.json 파일을 찾을 수 없습니다.');
+                return;
+            }
+
+            try {
+                const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+                const template = appJson.template || '';
+
+                if (!template) {
+                    vscode.window.showWarningMessage('template 값이 비어있습니다.');
+                    return;
+                }
+
+                await vscode.env.clipboard.writeText(template);
+                vscode.window.showInformationMessage(`Template 복사됨: ${template}`);
+            } catch (e) {
+                vscode.window.showErrorMessage(`Template 복사 실패: ${e.message}`);
+            }
+        }],
+
+        // Reveal current file in Wiz Explorer
+        ['wizExplorer.revealInWizExplorer', async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showWarningMessage('열린 파일이 없습니다.');
+                return;
+            }
+
+            const uri = editor.document.uri;
+            let filePath;
+
+            if (uri.scheme === 'file') {
+                filePath = uri.fsPath;
+            } else if (uri.scheme === 'wiz') {
+                filePath = WizPathUtils.getRealPathFromUri(uri);
+            }
+
+            if (filePath) {
+                try {
+                    const item = await fileExplorerProvider.findItem(filePath);
+                    if (item) {
+                        treeView.reveal(item, { select: true, focus: true, expand: true });
+                    }
+                } catch (e) {
+                    vscode.window.showWarningMessage('Wiz Explorer에서 항목을 찾을 수 없습니다.');
+                }
+            }
+        }],
+
+        // Create App shortcuts from command palette
+        ['wizExplorer.createPage', async () => {
+            const parentPath = path.join(fileExplorerProvider.workspaceRoot, 'src', 'page');
+            if (!fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true });
+            }
+            await createStandardApp('page', parentPath, fileExplorerProvider);
+        }],
+
+        ['wizExplorer.createComponent', async () => {
+            const parentPath = path.join(fileExplorerProvider.workspaceRoot, 'src', 'component');
+            if (!fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true });
+            }
+            await createStandardApp('component', parentPath, fileExplorerProvider);
+        }],
+
+        ['wizExplorer.createWidget', async () => {
+            const parentPath = path.join(fileExplorerProvider.workspaceRoot, 'src', 'widget');
+            if (!fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true });
+            }
+            await createStandardApp('widget', parentPath, fileExplorerProvider);
+        }],
+
+        ['wizExplorer.createLayout', async () => {
+            const parentPath = path.join(fileExplorerProvider.workspaceRoot, 'src', 'layout');
+            if (!fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true });
+            }
+            await createStandardApp('layout', parentPath, fileExplorerProvider);
+        }],
+
+        ['wizExplorer.createRoute', async () => {
+            const parentPath = path.join(fileExplorerProvider.workspaceRoot, 'src', 'route');
+            if (!fs.existsSync(parentPath)) {
+                fs.mkdirSync(parentPath, { recursive: true });
+            }
+            await createRoute(parentPath, false, fileExplorerProvider);
+        }]
     ];
 
     let clipboard = null;

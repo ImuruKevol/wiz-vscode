@@ -34,8 +34,83 @@
     "commands": [
       {
         "command": "wizExplorer.refresh",
-        "title": "Refresh",
+        "title": "Wiz: Refresh Explorer",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "wizExplorer.build",
+        "title": "Wiz: Build Project",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "wizExplorer.normalBuild",
+        "title": "Wiz: Normal Build"
+      },
+      {
+        "command": "wizExplorer.cleanBuild",
+        "title": "Wiz: Clean Build"
+      },
+      {
+        "command": "wizExplorer.showBuildOutput",
+        "title": "Wiz: Show Build Output"
+      },
+      {
+        "command": "wizExplorer.switchProject",
+        "title": "Wiz: Switch Project",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "wizExplorer.exportCurrentProject",
+        "title": "Wiz: Export Current Project"
+      },
+      {
+        "command": "wizExplorer.importProject",
+        "title": "Wiz: Import Project"
+      },
+      {
+        "command": "wizExplorer.newPackage",
+        "title": "Wiz: Create New Package",
+        "icon": "$(package)"
+      },
+      {
+        "command": "wizExplorer.goToApp",
+        "title": "Wiz: Go to App"
+      },
+      {
+        "command": "wizExplorer.showAppMenu",
+        "title": "Wiz: Switch App File"
+      },
+      {
+        "command": "wizExplorer.openAppInfo",
+        "title": "Wiz: Open App Info"
+      },
+      {
+        "command": "wizExplorer.copyCurrentTemplate",
+        "title": "Wiz: Copy Current App Template"
+      },
+      {
+        "command": "wizExplorer.revealInWizExplorer",
+        "title": "Wiz: Reveal in Wiz Explorer"
+      },
+      {
+        "command": "wizExplorer.createPage",
+        "title": "Wiz: Create New Page"
+      },
+      {
+        "command": "wizExplorer.createComponent",
+        "title": "Wiz: Create New Component"
+      },
+      {
+        "command": "wizExplorer.createWidget",
+        "title": "Wiz: Create New Widget"
+      },
+      {
+        "command": "wizExplorer.createLayout",
+        "title": "Wiz: Create New Layout"
+      },
+      {
+        "command": "wizExplorer.createRoute",
+        "title": "Wiz: Create New Route"
       },
       {
         "command": "wizExplorer.openFile",
@@ -47,13 +122,8 @@
       },
       {
         "command": "wizExplorer.openFolder",
-        "title": "Open Folder",
+        "title": "Wiz: Open Workspace Folder",
         "icon": "$(folder-opened)"
-      },
-      {
-        "command": "wizExplorer.switchProject",
-        "title": "Switch Project",
-        "icon": "$(list-unordered)"
       },
       {
         "command": "wizExplorer.newFile",
@@ -109,16 +179,6 @@
         "command": "wizExplorer.newApp",
         "title": "New App",
         "icon": "$(plus)"
-      },
-      {
-        "command": "wizExplorer.build",
-        "title": "Build Project",
-        "icon": "$(tools)"
-      },
-      {
-        "command": "wizExplorer.newPackage",
-        "title": "New Package",
-        "icon": "$(package)"
       },
       {
         "command": "wizExplorer.exportPackage",
@@ -321,6 +381,188 @@
           "command": "wizExplorer.downloadFile",
           "when": "view == wizExplorer && (viewItem == file || viewItem == folder)",
           "group": "z_reveal"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "wizExplorer.refresh",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.build",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.normalBuild",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.cleanBuild",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.showBuildOutput",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.switchProject",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.exportCurrentProject",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.importProject",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.newPackage",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.goToApp",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.showAppMenu",
+          "when": "wizExplorer:isAppFile"
+        },
+        {
+          "command": "wizExplorer.openAppInfo",
+          "when": "wizExplorer:isAppFile"
+        },
+        {
+          "command": "wizExplorer.copyCurrentTemplate",
+          "when": "wizExplorer:isAppFile"
+        },
+        {
+          "command": "wizExplorer.revealInWizExplorer",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "wizExplorer.createPage",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.createComponent",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.createWidget",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.createLayout",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.createRoute",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.openFolder",
+          "when": "true"
+        },
+        {
+          "command": "wizExplorer.openFile",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.revealInExplorer",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.newFile",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.newFolder",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.copy",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.paste",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.delete",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.info",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.controller",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.ui",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.component",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.scss",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.api",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.socket",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.info.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.controller.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.ui.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.component.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.scss.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.api.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.switch.socket.active",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.newApp",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.exportPackage",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.copyTemplate",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.downloadFile",
+          "when": "false"
         }
       ]
     },

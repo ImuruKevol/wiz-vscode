@@ -71,6 +71,9 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 ### 프로젝트 내보내기/가져오기
 - [036](./devlog/036-project-export-import.md) - 프로젝트 내보내기 및 .wizproject 파일 가져오기 기능
 
+### 커맨드 팔레트 지원
+- [037](./devlog/037-command-palette.md) - 커맨드 팔레트에서 주요 기능 접근 지원
+
 ---
 
 ## 현재 지원 기능
