@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onView:wizExplorer",
+    "workspaceContains:**/project/*/src"
   ],
   "main": "./src/extension.js",
   "contributes": {
