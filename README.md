@@ -2,33 +2,74 @@
 
 A comprehensive VS Code extension for managing [Wiz Framework](https://github.com/season-framework/wiz) projects with an enhanced file explorer, specialized editors, and intelligent project navigation.
 
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/season-framework/wiz-vscode)
+[![Wiz](https://img.shields.io/badge/wiz-%3E%3D2.5.0-blue.svg)](https://github.com/season-framework/wiz)
+[![VS Code](https://img.shields.io/badge/VS%20Code-1.60+-purple.svg)](https://code.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![VS Code](https://img.shields.io/badge/VS%20Code-1.60+-blue.svg)](https://code.visualstudio.com/)
+
+## 📋 Requirements
+
+- **VS Code**: 1.60.0 or higher
+- **Wiz Framework**: 2.5.0 or higher
+- **Node.js**: 14.x or higher
+
+---
 
 ## ✨ Features
 
 ### 🗂️ Smart Project Explorer
-- **Three-Level Structure**: Source, Packages (Portal), and Project categories
+- **Four-Level Structure**: Source, Packages (Portal), Exports, and Project categories
 - **App Type Recognition**: Automatic detection of Page, Component, Layout, and Route apps
 - **Virtual Folders**: Display standard folders even when they don't exist yet
 - **Auto-Highlighting**: Automatically reveals active file in the tree view
+- **Drag & Drop**: Move files and folders effortlessly
+- **Multi-Select**: Work with multiple items simultaneously
 
 ### ✏️ Specialized Editors
 - **App Info Editor**: Webview-based visual editor for `app.json` configuration
 - **Route Editor**: Dedicated interface for route-specific settings
 - **Portal App Editor**: Namespace-synced editor for portal applications
 - **Portal Package Editor**: Manage `portal.json` with auto-completed fields
+- **View Type Selection**: Choose between HTML and Pug templates
 
-### 🎯 Developer Experience
-- **Keyboard Shortcuts**: Quick navigation with Alt+1-6 (Info, UI, Component, SCSS, API, Socket)
-- **Drag & Drop**: Move files and folders effortlessly
-- **Multi-Select**: Work with multiple items simultaneously
-- **Title Display**: Show user-friendly app titles instead of IDs
+### ⌨️ Command Palette Integration
+Quick access to all major features via `Ctrl+Shift+P`:
+
+| Command | Description |
+|---------|-------------|
+| `Wiz: Build Project` | Build with type selection (Normal/Clean) |
+| `Wiz: Normal Build` | Direct normal build |
+| `Wiz: Clean Build` | Direct clean build |
+| `Wiz: Show Build Output` | Display build output channel |
+| `Wiz: Switch Project` | Quick project switching |
+| `Wiz: Export Current Project` | Export to `.wizproject` file |
+| `Wiz: Import Project` | Import from `.wizproject` file |
+| `Wiz: Go to App` | Search and navigate to any app |
+| `Wiz: Create New Page/Component/Layout/Route` | Create apps with Source/Package selection |
+| `Wiz: Create New Package` | Create new Portal package |
+| `Wiz: Refresh Explorer` | Refresh the tree view |
+
+### 🎯 Keyboard Shortcuts
+When editing a Wiz app (`wiz://` scheme active):
+- `Alt+1`: Open Info tab
+- `Alt+2`: Open UI/Controller tab
+- `Alt+3`: Open Component tab
+- `Alt+4`: Open SCSS tab
+- `Alt+5`: Open API tab
+- `Alt+6`: Open Socket tab
 
 ### 🚀 Project Management
 - **Git Integration**: Clone projects directly from repositories
 - **Project Switching**: Quick switch between multiple projects
+- **Project Export**: Export projects as `.wizproject` archives
+- **Project Import**: Import `.wizproject` files
 - **Project Deletion**: Safe removal with confirmation dialogs
+- **Package Management**: Create and export Portal packages
+
+### 🔄 Build Integration
+- **Auto-Build Trigger**: Automatic build on file save
+- **Build Output Channel**: Real-time build log viewing
+- **Normal/Clean Build**: Choose build type as needed
 
 ---
 
@@ -38,7 +79,7 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/your-org/wiz-vscode.git
+git clone https://github.com/season-framework/wiz-vscode.git
 cd wiz-vscode
 ```
 
@@ -54,7 +95,7 @@ npm install
 ### From VSIX Package
 
 ```bash
-code --install-extension wiz-vscode-0.0.1.vsix
+code --install-extension wiz-vscode-1.0.0.vsix
 ```
 
 ---
@@ -68,51 +109,46 @@ code --install-extension wiz-vscode-0.0.1.vsix
 3. Navigate through the categorized tree structure:
    - **Source**: Contains `src/` apps (page, component, layout, route)
    - **Packages**: Portal packages from `src/portal/`
+   - **Exports**: Exported packages and projects
    - **Project**: Root-level files and directories
 
 ### Creating New Apps
 
-**Standard App (Page/Component/Layout)**:
-1. Right-click on an app group (e.g., `app/page`)
-2. Select "New App"
-3. Fill in the form (Title, Namespace, Category, etc.)
-4. Files are automatically generated
+**From Command Palette** (Recommended):
+1. Press `Ctrl+Shift+P`
+2. Type `Wiz: Create New Page` (or Component/Layout/Route)
+3. Select location: **Source** or **Package**
+4. If Package selected, choose the target package
+5. Fill in the namespace and optional fields
 
-**Route App**:
-1. Right-click on `route` folder (Source or Portal)
-2. Select "New Route"
-3. Configure route settings
-4. `app.json` and `controller.py` are created
-
-**Portal App**:
-1. Navigate to a portal package's `app` folder
-2. Right-click → "New Portal App"
-3. Namespace, folder name, and ID are automatically synced
-
-### Editing App Configuration
-
-1. Click on an app folder in the tree
-2. The Info editor (Webview) opens automatically
-3. Modify fields and click "Save"
-4. Changes are written to `app.json`
-
-### Keyboard Shortcuts
-
-When editing a Wiz app (`wiz://` scheme active):
-- `Alt+1`: Open Info tab
-- `Alt+2`: Open UI/Controller tab
-- `Alt+3`: Open Component tab
-- `Alt+4`: Open SCSS tab
-- `Alt+5`: Open API tab
-- `Alt+6`: Open Socket tab
+**From Context Menu**:
+1. Right-click on an app group in the tree
+2. Select "New App" or "New Route"
+3. Fill in the form
 
 ### Managing Projects
 
-1. Click the **Project Switcher** icon in the explorer toolbar
-2. Options:
-   - **Import Project**: Clone from Git URL into `project/<name>`
-   - **Delete Project**: Remove a project with confirmation
-   - **Switch**: Change active project
+**Switch Project**:
+1. Press `Ctrl+Shift+P` → `Wiz: Switch Project`
+2. Or click the Project Switcher icon in the explorer toolbar
+
+**Export Project**:
+1. Press `Ctrl+Shift+P` → `Wiz: Export Current Project`
+2. Project is saved to `exports/` folder as `.wizproject`
+
+**Import Project**:
+1. Press `Ctrl+Shift+P` → `Wiz: Import Project`
+2. Select a `.wizproject` file
+3. Enter project name and confirm
+
+### Building
+
+**Manual Build**:
+- `Wiz: Normal Build` - Standard incremental build
+- `Wiz: Clean Build` - Full rebuild from scratch
+
+**Auto Build**:
+- Triggered automatically when saving any file in the project
 
 ---
 
@@ -145,7 +181,7 @@ EditorBase (Abstract)
 ### Explorer (`src/explorer/`)
 
 - **FileExplorerProvider**: Main tree data provider
-- **CategoryHandlers**: Source, Portal, Project category logic
+- **CategoryHandlers**: Source, Portal, Project, Exports category logic
 - **AppPatternProcessor**: Groups apps by type (page, component, layout)
 - **WizDragAndDropController**: Handles file/folder movement
 
@@ -172,7 +208,7 @@ wiz-vscode/
 │   │   └── treeItems/        # Tree item classes
 │   └── extension.js          # Extension entry point
 ├── resources/                # Icons and assets
-├── devlog/                   # Development logs (001-033)
+├── devlog/                   # Development logs (001-038)
 ├── package.json              # Extension manifest
 └── DEVLOG.md                 # Comprehensive development history
 ```
@@ -201,42 +237,35 @@ Press F5 in VS Code
 Open Developer Tools in Extension Host window
 ```
 
-### Code Style
-
-- **ES6 Modules**: Use `require()` (CommonJS for VS Code compatibility)
-- **Naming**: camelCase for functions/variables, PascalCase for classes
-- **Comments**: JSDoc for public methods
-- **Error Handling**: Try-catch with user-friendly messages
-
 ---
 
-## 📊 Development Status
+## 📊 Version History
 
-### ✅ Completed (v0.1.0)
+### v1.0.0 (Current)
 
-- [x] Tree View with Source/Portal/Project categories
-- [x] App/Route/Portal App editors
-- [x] App creation workflows
-- [x] Drag & drop file operations
-- [x] Keyboard shortcuts (Alt+1-6)
-- [x] Auto-reveal active file
-- [x] Project import/delete
-- [x] Title-based app display
+**Core Features**:
+- ✅ Tree View with Source/Portal/Exports/Project categories
+- ✅ App/Route/Portal App editors with View Type selection
+- ✅ App creation workflows (Source and Package locations)
+- ✅ Drag & drop file operations
+- ✅ Keyboard shortcuts (Alt+1-6)
+- ✅ Auto-reveal active file
 
-### 🚧 In Progress
+**Project Management**:
+- ✅ Project import/export (.wizproject format)
+- ✅ Project switching and deletion
+- ✅ Git-based project cloning
+- ✅ Package creation and export (.wizpkg format)
 
-- [ ] Package creation wizard
-- [ ] Search functionality
-- [ ] Git status indicators
+**Build Integration**:
+- ✅ Auto-build on file save
+- ✅ Normal/Clean build options
+- ✅ Build output channel
 
-### 🔮 Planned Features
-
-See [DEVLOG.md](./DEVLOG.md#향후-개선-사항) for the complete roadmap, including:
-- Wiz CLI integration (build, run, deploy)
-- MCP (Model Context Protocol) server
-- Live preview
-- Debugger support
-- Performance optimizations
+**Command Palette**:
+- ✅ 20+ commands accessible via Ctrl+Shift+P
+- ✅ App search and navigation (Go to App)
+- ✅ Direct build commands
 
 ---
 
@@ -245,11 +274,11 @@ See [DEVLOG.md](./DEVLOG.md#향후-개선-사항) for the complete roadmap, incl
 Detailed development logs are maintained in [devlog/](./devlog/) directory.
 
 **Recent Updates**:
-- **033**: App title display improvement ([details](./devlog/033-app-title-display.md))
-- **032**: Project deletion feature ([details](./devlog/032-project-deletion.md))
-- **031**: Project import from Git ([details](./devlog/031-project-import.md))
-- **030**: Auto-reveal in explorer ([details](./devlog/030-auto-reveal.md))
-- **029**: Portal app path labels ([details](./devlog/029-portal-app-path-label.md))
+- **038**: Command palette improvements and bug fixes
+- **037**: Command palette feature addition
+- **036**: Project export/import functionality
+- **035**: View Type selection (HTML/Pug)
+- **034**: Package management and build trigger
 
 [View Full Development History →](./DEVLOG.md)
 
@@ -273,7 +302,6 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `fix:` Bug fixes
 - `docs:` Documentation changes
 - `refactor:` Code refactoring
-- `test:` Test additions/updates
 - `chore:` Maintenance tasks
 
 ---
@@ -284,20 +312,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🙏 Acknowledgments
-
-- Built for the [Wiz Framework](https://github.com/season-framework/wiz)
-- Inspired by VS Code's extension API capabilities
-- Community feedback and contributions
-
----
-
 ## 🔗 Resources
 
 - **Wiz Framework**: [https://github.com/season-framework/wiz](https://github.com/season-framework/wiz)
 - **VS Code Extension API**: [https://code.visualstudio.com/api](https://code.visualstudio.com/api)
-- **Issue Tracker**: [GitHub Issues](https://github.com/your-org/wiz-vscode/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/wiz-vscode/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/season-framework/wiz-vscode/issues)
 
 ---
 

@@ -1,10 +1,16 @@
 {
   "name": "wiz-vscode",
   "displayName": "Wiz VSCode Explorer",
-  "description": "File explorer prototype for VSCode",
-  "version": "0.0.1",
+  "description": "A comprehensive VS Code extension for managing Wiz Framework projects",
+  "version": "1.0.0",
+  "publisher": "season-framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/season-framework/wiz-vscode"
+  },
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.60.0",
+    "wiz": ">=2.5.0"
   },
   "categories": [
     "Other"
