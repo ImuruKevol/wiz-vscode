@@ -44,6 +44,18 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "wizExplorer.startMcpServer",
+        "title": "Wiz: Start MCP Server"
+      },
+      {
+        "command": "wizExplorer.stopMcpServer",
+        "title": "Wiz: Stop MCP Server"
+      },
+      {
+        "command": "wizExplorer.showMcpConfig",
+        "title": "Wiz: Show MCP Configuration"
+      },
+      {
         "command": "wizExplorer.build",
         "title": "Wiz: Build Project",
         "icon": "$(tools)"
@@ -392,6 +404,18 @@
           "when": "workspaceFolderCount > 0"
         },
         {
+          "command": "wizExplorer.startMcpServer",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.stopMcpServer",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.showMcpConfig",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
           "command": "wizExplorer.build",
           "when": "workspaceFolderCount > 0"
         },
@@ -608,7 +632,12 @@
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "node ./test/runTest.js"
+    "test": "node ./test/runTest.js",
+    "mcp": "node ./src/mcp/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "archiver": "^5.3.1"
   },
   "devDependencies": {
     "@types/vscode": "^1.60.0",

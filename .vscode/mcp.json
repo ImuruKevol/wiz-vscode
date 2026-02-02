@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+        "wiz": {
+            "command": "node",
+            "args": ["./src/mcp/index.js"],
+            "description": "Wiz Framework project management MCP server"
+        }
+    }
+}

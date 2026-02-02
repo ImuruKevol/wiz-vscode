@@ -32,11 +32,33 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 - **Portal Package Editor**: Manage `portal.json` with auto-completed fields
 - **View Type Selection**: Choose between HTML and Pug templates
 
+### 🤖 MCP (Model Context Protocol) Integration
+AI 에이전트(Claude 등)가 Wiz 프로젝트를 직접 관리할 수 있는 MCP 서버 내장:
+
+| Tool | Description |
+|------|-------------|
+| `wiz_list_projects` | 워크스페이스의 모든 프로젝트 목록 조회 |
+| `wiz_switch_project` | 프로젝트 전환 |
+| `wiz_build` | 프로젝트 빌드 (Normal/Clean) |
+| `wiz_list_apps` | 앱 목록 조회 (page, component, layout, route) |
+| `wiz_create_app` | 새 앱 생성 |
+| `wiz_create_route` | 새 라우트 생성 |
+| `wiz_update_app` | app.json 설정 업데이트 |
+| `wiz_read_app_file` | 앱 파일 읽기 (view.html, view.ts 등) |
+| `wiz_write_app_file` | 앱 파일 쓰기 |
+| `wiz_list_packages` | Portal 패키지 목록 조회 |
+| `wiz_create_package` | 새 패키지 생성 |
+| `wiz_export_project` | 프로젝트 내보내기 |
+| `wiz_import_project` | 프로젝트 가져오기 |
+
 ### ⌨️ Command Palette Integration
 Quick access to all major features via `Ctrl+Shift+P`:
 
 | Command | Description |
 |---------|-------------|
+| `Wiz: Start MCP Server` | MCP 서버 시작 |
+| `Wiz: Stop MCP Server` | MCP 서버 중지 |
+| `Wiz: Show MCP Configuration` | Claude Desktop 설정용 MCP 구성 표시 |
 | `Wiz: Build Project` | Build with type selection (Normal/Clean) |
 | `Wiz: Normal Build` | Direct normal build |
 | `Wiz: Clean Build` | Direct clean build |
@@ -70,6 +92,56 @@ When editing a Wiz app (`wiz://` scheme active):
 - **Auto-Build Trigger**: Automatic build on file save
 - **Build Output Channel**: Real-time build log viewing
 - **Normal/Clean Build**: Choose build type as needed
+
+---
+
+## 🤖 MCP Server Setup
+
+### Claude Desktop Integration
+
+1. **Show MCP Configuration**:
+   - Press `Ctrl+Shift+P` → `Wiz: Show MCP Configuration`
+   - Configuration is copied to clipboard
+
+2. **Add to Claude Desktop**:
+   - Open Claude Desktop settings
+   - Add the MCP server configuration:
+
+```json
+{
+  "mcpServers": {
+    "wiz": {
+      "command": "node",
+      "args": ["/path/to/wiz-vscode/src/mcp/index.js"],
+      "env": {
+        "WIZ_WORKSPACE": "/path/to/your/wiz/workspace",
+        "WIZ_PROJECT": "main"
+      }
+    }
+  }
+}
+```
+
+3. **Restart Claude Desktop** to apply changes
+
+### VS Code Agent Mode
+
+1. **Start MCP Server**:
+   - Press `Ctrl+Shift+P` → `Wiz: Start MCP Server`
+
+2. **Use with VS Code Copilot**:
+   - MCP tools are automatically available in agent mode
+   - Ask Claude to manage your Wiz project
+
+### Example Prompts
+
+```
+"Wiz 프로젝트의 모든 페이지 앱 목록을 보여줘"
+"새로운 page 앱을 만들어줘. namespace는 dashboard로"
+"dizest 패키지의 모든 앱 정보를 확인해줘"
+"현재 프로젝트를 빌드해줘"
+"myapp의 view.html 파일을 읽어줘"
+```
 
 ---
 

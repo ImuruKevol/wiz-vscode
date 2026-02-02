@@ -513,12 +513,94 @@ function activate(context) {
         }
     }));
 
+    // ==================== MCP Server Management ====================
+    let mcpServerProcess = null;
+    const mcpOutputChannel = vscode.window.createOutputChannel('Wiz MCP Server');
+
+    function startMcpServer() {
+        if (mcpServerProcess) {
+            vscode.window.showWarningMessage('MCP 서버가 이미 실행 중입니다.');
+            return;
+        }
+
+        const mcpServerPath = path.join(context.extensionPath, 'src', 'mcp', 'index.js');
+        
+        mcpServerProcess = cp.spawn('node', [mcpServerPath], {
+            cwd: workspaceRoot,
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        mcpOutputChannel.appendLine(`[${new Date().toLocaleTimeString()}] MCP Server started`);
+        mcpOutputChannel.show(true);
+
+        mcpServerProcess.stderr.on('data', (data) => {
+            mcpOutputChannel.appendLine(data.toString());
+        });
+
+        mcpServerProcess.on('close', (code) => {
+            mcpOutputChannel.appendLine(`[${new Date().toLocaleTimeString()}] MCP Server stopped (code: ${code})`);
+            mcpServerProcess = null;
+        });
+
+        mcpServerProcess.on('error', (err) => {
+            mcpOutputChannel.appendLine(`[${new Date().toLocaleTimeString()}] MCP Server error: ${err.message}`);
+            mcpServerProcess = null;
+        });
+
+        vscode.window.showInformationMessage('MCP 서버가 시작되었습니다.');
+    }
+
+    function stopMcpServer() {
+        if (!mcpServerProcess) {
+            vscode.window.showWarningMessage('실행 중인 MCP 서버가 없습니다.');
+            return;
+        }
+
+        mcpServerProcess.kill();
+        mcpServerProcess = null;
+        vscode.window.showInformationMessage('MCP 서버가 중지되었습니다.');
+    }
+
+    function getMcpConfig() {
+        return {
+            mcpServers: {
+                wiz: {
+                    command: 'node',
+                    args: [path.join(context.extensionPath, 'src', 'mcp', 'index.js')],
+                    env: {
+                        WIZ_WORKSPACE: workspaceRoot || '',
+                        WIZ_PROJECT: currentProject || 'main'
+                    }
+                }
+            }
+        };
+    }
+
     // ==================== Commands Registration ====================
     const commands = [
         // Core commands
         ['wizExplorer.refresh', () => fileExplorerProvider.refresh()],
         ['wizExplorer.openAppEditor', (appPath, groupType) => appEditorProvider.openEditor(appPath, groupType)],
         ['wizExplorer.openPortalInfo', (portalJsonPath) => appEditorProvider.openPortalInfoEditor(portalJsonPath)],
+
+        // MCP Server commands
+        ['wizExplorer.startMcpServer', () => startMcpServer()],
+        ['wizExplorer.stopMcpServer', () => stopMcpServer()],
+        ['wizExplorer.showMcpConfig', async () => {
+            const config = getMcpConfig();
+            const configJson = JSON.stringify(config, null, 2);
+            
+            // Show config in a new document
+            const doc = await vscode.workspace.openTextDocument({
+                content: configJson,
+                language: 'json'
+            });
+            await vscode.window.showTextDocument(doc);
+            
+            // Also copy to clipboard
+            await vscode.env.clipboard.writeText(configJson);
+            vscode.window.showInformationMessage('MCP 설정이 클립보드에 복사되었습니다. Claude Desktop 설정에 붙여넣기 하세요.');
+        }],
         
         // Build command
         ['wizExplorer.build', async () => {
