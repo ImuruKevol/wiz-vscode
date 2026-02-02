@@ -65,6 +65,18 @@ class RouteEditor extends AppEditor {
                 vscode.setState({ appPath: ${JSON.stringify(this.appPath)} });
             }
 
+            // Override collectFormData for Route
+            function collectFormData() {
+                return {
+                    title: document.getElementById('title').value,
+                    id: document.getElementById('id').value,
+                    route: document.getElementById('route').value,
+                    category: document.getElementById('category').value,
+                    viewuri: document.getElementById('viewuri').value,
+                    controller: document.getElementById('controller').value
+                };
+            }
+
             function save() {
                 vscode.postMessage({ command: 'update', data: collectFormData() });
             }
