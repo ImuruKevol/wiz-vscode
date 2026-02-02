@@ -361,6 +361,7 @@ Detailed development logs are maintained in [devlog/](./devlog/) directory.
 - Validate MCP features and improve Agent compatibility
 - Agent Guide documentation for WIZ CLI and main features
 - Drag & Drop resource file/folder upload
+- Develop wiz server cache management features (Wiz library version update expected)
 
 ---
 
