@@ -33,32 +33,32 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 - **View Type Selection**: Choose between HTML and Pug templates
 
 ### 🤖 MCP (Model Context Protocol) Integration
-AI 에이전트(Claude 등)가 Wiz 프로젝트를 직접 관리할 수 있는 MCP 서버 내장:
+Built-in MCP server that allows AI agents (like Claude) to directly manage Wiz projects:
 
 | Tool | Description |
 |------|-------------|
-| `wiz_list_projects` | 워크스페이스의 모든 프로젝트 목록 조회 |
-| `wiz_switch_project` | 프로젝트 전환 |
-| `wiz_build` | 프로젝트 빌드 (Normal/Clean) |
-| `wiz_list_apps` | 앱 목록 조회 (page, component, layout, route) |
-| `wiz_create_app` | 새 앱 생성 |
-| `wiz_create_route` | 새 라우트 생성 |
-| `wiz_update_app` | app.json 설정 업데이트 |
-| `wiz_read_app_file` | 앱 파일 읽기 (view.html, view.ts 등) |
-| `wiz_write_app_file` | 앱 파일 쓰기 |
-| `wiz_list_packages` | Portal 패키지 목록 조회 |
-| `wiz_create_package` | 새 패키지 생성 |
-| `wiz_export_project` | 프로젝트 내보내기 |
-| `wiz_import_project` | 프로젝트 가져오기 |
+| `wiz_list_projects` | List all projects in workspace |
+| `wiz_switch_project` | Switch project |
+| `wiz_build` | Build project (Normal/Clean) |
+| `wiz_list_apps` | List apps (page, component, layout, route) |
+| `wiz_create_app` | Create new app |
+| `wiz_create_route` | Create new route |
+| `wiz_update_app` | Update app.json configuration |
+| `wiz_read_app_file` | Read app file (view.html, view.ts, etc.) |
+| `wiz_write_app_file` | Write app file |
+| `wiz_list_packages` | List Portal packages |
+| `wiz_create_package` | Create new package |
+| `wiz_export_project` | Export project |
+| `wiz_import_project` | Import project |
 
 ### ⌨️ Command Palette Integration
 Quick access to all major features via `Ctrl+Shift+P`:
 
 | Command | Description |
 |---------|-------------|
-| `Wiz: Start MCP Server` | MCP 서버 시작 |
-| `Wiz: Stop MCP Server` | MCP 서버 중지 |
-| `Wiz: Show MCP Configuration` | Claude Desktop 설정용 MCP 구성 표시 |
+| `Wiz: Start MCP Server` | Start MCP Server |
+| `Wiz: Stop MCP Server` | Stop MCP Server |
+| `Wiz: Show MCP Configuration` | Show MCP configuration for Claude Desktop |
 | `Wiz: Build Project` | Build with type selection (Normal/Clean) |
 | `Wiz: Normal Build` | Direct normal build |
 | `Wiz: Clean Build` | Direct clean build |
@@ -136,11 +136,11 @@ When editing a Wiz app (`wiz://` scheme active):
 ### Example Prompts
 
 ```
-"Wiz 프로젝트의 모든 페이지 앱 목록을 보여줘"
-"새로운 page 앱을 만들어줘. namespace는 dashboard로"
-"dizest 패키지의 모든 앱 정보를 확인해줘"
-"현재 프로젝트를 빌드해줘"
-"myapp의 view.html 파일을 읽어줘"
+"Show me all page apps in the Wiz project"
+"Create a new page app with namespace dashboard"
+"Check all app information in the dizest package"
+"Build the current project"
+"Read view.html file of myapp"
 ```
 
 ---
@@ -353,6 +353,14 @@ Detailed development logs are maintained in [devlog/](./devlog/) directory.
 - **034**: Package management and build trigger
 
 [View Full Development History →](./DEVLOG.md)
+
+---
+
+## 📅 Roadmap & TODO
+
+- Validate MCP features and improve Agent compatibility
+- Agent Guide documentation for WIZ CLI and main features
+- Drag & Drop resource file/folder upload
 
 ---
 
