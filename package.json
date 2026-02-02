@@ -366,7 +366,7 @@
         },
         {
           "command": "wizExplorer.delete",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == appItem)",
+          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
           "group": "3_delete"
         },
         {
