@@ -202,6 +202,11 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "wizExplorer.uploadPackage",
+        "title": "Package 업로드",
+        "icon": "$(cloud-upload)"
+      },
+      {
         "command": "wizExplorer.exportPackage",
         "title": "Export Package",
         "icon": "$(export)"
@@ -214,6 +219,11 @@
         "command": "wizExplorer.downloadFile",
         "title": "다운로드...",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "wizExplorer.rename",
+        "title": "이름 변경",
+        "icon": "$(edit)"
       },
       {
         "command": "wizExplorer.switch.info.active",
@@ -341,6 +351,11 @@
           "group": "1_modification"
         },
         {
+          "command": "wizExplorer.uploadPackage",
+          "when": "view == wizExplorer && viewItem == portalCategory",
+          "group": "1_modification"
+        },
+        {
           "command": "wizExplorer.newApp",
           "when": "view == wizExplorer && viewItem == appGroup",
           "group": "1_modification"
@@ -392,6 +407,11 @@
           "command": "wizExplorer.paste",
           "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory)",
           "group": "2_clipboard"
+        },
+        {
+          "command": "wizExplorer.rename",
+          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == portalPackage)",
+          "group": "3_modification"
         },
         {
           "command": "wizExplorer.delete",

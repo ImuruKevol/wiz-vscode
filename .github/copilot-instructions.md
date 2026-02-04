@@ -3,9 +3,16 @@
 ## Project Overview
 This is the "Wiz Explorer" VS Code extension designed to manage Wiz Framework projects. It provides a custom Tree View for project structure (Source, Packages/Portal, Project), specialized Webview editors for configuration files, and a virtual file system (`wiz://`) for managing application files.
 
+> 📚 **Architecture Guide**: See [architecture-guide.md](./architecture-guide.md) for detailed refactoring principles and coding conventions.
+
 ## Architecture & Core Components
 
-- **Entry Point**: `src/extension.js` initializes the `FileExplorerProvider`, `AppEditorProvider`, and registers all `wizExplorer.*` commands.
+- **Entry Point**: `src/extension.js` initializes providers, registers commands, and delegates to service managers.
+- **Services Layer**: `src/services/` contains business logic separated by domain:
+  - `source/appManager.js`: Standard App/Route creation and management
+  - `packages/packageManager.js`: Package and Portal App management
+  - `project/projectManager.js`: Project lifecycle (switch, import, export, delete)
+  - `file/fileManager.js`: File operations (create, delete, copy, paste, rename, download)
 - **Tree Explorer**:
   - `src/explorer/fileExplorerProvider.js`: Main provider. Handles tree data, sorts Portal folders (`info` > `app` > `route`...), and creates virtual items (`(create)`) for missing standard directories.
   - `src/explorer/models/categoryHandlers.js`: Logic for distinct tree categories (`Source`, `Packages/Portal`, `Project`).
