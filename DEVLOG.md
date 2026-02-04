@@ -9,71 +9,84 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
-### 초기 개발 (기반 기능 구현)
-- [001](./devlog/001-project-setup.md) - 프로젝트 초기 설정
-- [002](./devlog/002-tree-view.md) - Tree View 구현
-- [003](./devlog/003-file-system-provider.md) - File System Provider 구현
-- [004](./devlog/004-app-editor-provider.md) - App Editor Provider 구현
-- [005](./devlog/005-info-editor.md) - Info Editor 구현
-- [006](./devlog/006-new-app.md) - New App 기능 구현
-- [007](./devlog/007-delete.md) - Delete 기능 구현
-- [008](./devlog/008-keyboard-shortcuts.md) - Alt+1-6 단축키 구현
+### v1.0.1 (Configs & Improvements)
 
-### 버그 수정 및 개선
-- [009](./devlog/009-keyboard-shortcuts-fix.md) - Alt+1-6 단축키 버그 수정
-- [010](./devlog/010-refactoring.md) - 전체 코드 리팩토링
-- [011](./devlog/011-split-view-fix.md) - 창 분할 시 Wiz 탭 복원 버그 수정
+> 📌 **Commit:** `039-042` - Config 카테고리, 정렬 개선, 다운로드/업로드, 리팩토링
 
-### Route 앱 지원
-- [012](./devlog/012-route-support.md) - Route 앱 지원 추가
-- [013](./devlog/013-route-info-editor.md) - Route Info 에디터 구현
-- [014](./devlog/014-namespace-sync.md) - Namespace 변경 시 폴더명/ID 자동 변경
-- [015](./devlog/015-route-ui-improvements.md) - Route 앱 UI 개선
+- [042](./devlog/v1.0.1/042-core-refactoring.md) - Core 모듈 리팩토링 (AppCreator, ZipUtils, UploadWebview 클래스 분리)
+- [041](./devlog/v1.0.1/041-download-upload-feature.md) - 다운로드/업로드 기능 구현 (.wizpkg, .wizapp 지원)
+- [040](./devlog/v1.0.1/040-explorer-sorting-improvements.md) - 탐색기 정렬 및 표시 개선
+- [039](./devlog/v1.0.1/039-config-category-update.md) - Config 카테고리 추가 및 탐색기 구조 개선
 
-### Portal/Packages 개선
-- [016](./devlog/016-portal-category.md) - Portal 카테고리 개선
-- [017](./devlog/017-portal-info-editor.md) - Portal Info 에디터 구현
+### v1.0.0 (Initial Release)
 
-### 에디터 코드 리팩토링
-- [018](./devlog/018-editor-refactoring.md) - AppEditorProvider 분리
+> 📌 **Commit:** `001-038` - 초기 릴리즈
 
-### Portal App 에디터 및 생성 기능
-- [019](./devlog/019-portal-app-editor.md) - Portal App 에디터 구현
-- [020](./devlog/020-portal-app-creation.md) - Portal App 생성 기능
-- [021](./devlog/021-portal-route-controller.md) - Portal Route Controller 경로 수정
+#### 커맨드 팔레트 지원
+- [038](./devlog/v1.0.0/038-command-palette-improvements.md) - 커맨드 팔레트 기능 개선 및 버그 수정
+- [037](./devlog/v1.0.0/037-command-palette.md) - 커맨드 팔레트에서 주요 기능 접근 지원
 
-### UI/UX 개선
-- [022](./devlog/022-portal-folder-icons.md) - Portal 패키지 폴더 아이콘 통일
-- [023](./devlog/023-explorer-ui-cleanup.md) - 탐색기 상단 UI 정리
-- [024](./devlog/024-source-route-group-removal.md) - Source app/route 그룹 제거
+#### 프로젝트 내보내기/가져오기
+- [036](./devlog/v1.0.0/036-project-export-import.md) - 프로젝트 내보내기 및 .wizproject 파일 가져오기 기능
 
-### Route 앱 생성 기능
-- [025](./devlog/025-route-creation.md) - Route 앱 생성 기능 구현
+#### View Type 기능
+- [035](./devlog/v1.0.0/035-view-type-selection.md) - View Type 선택 기능 (pug/html), 기본 타입 HTML로 변경
 
-### 탐색기 기능 강화
-- [026](./devlog/026-drag-and-drop.md) - 드래그 앤 드롭 기능 추가
-- [027](./devlog/027-multi-select.md) - 다중 선택 기능 추가
-- [028](./devlog/028-portal-default-folders.md) - Portal 기본 폴더 자동 표시
-- [029](./devlog/029-portal-app-path-label.md) - Portal App 에디터 경로 개선
-- [030](./devlog/030-auto-reveal.md) - 탐색기 자동 하이라이팅 구현
+#### 패키지 관리 및 빌드
+- [034](./devlog/v1.0.0/034-package-management.md) - 패키지 생성/내보내기, 빌드 트리거, App/Route 생성 다이얼로그 방식 변경
 
-### 프로젝트 관리 기능
-- [031](./devlog/031-project-import.md) - 프로젝트 불러오기 기능 추가
-- [032](./devlog/032-project-deletion.md) - 프로젝트 삭제 기능 추가
-- [033](./devlog/033-app-title-display.md) - App 트리 아이템 표기 개선
+#### 프로젝트 관리 기능
+- [033](./devlog/v1.0.0/033-app-title-display.md) - App 트리 아이템 표기 개선
+- [032](./devlog/v1.0.0/032-project-deletion.md) - 프로젝트 삭제 기능 추가
+- [031](./devlog/v1.0.0/031-project-import.md) - 프로젝트 불러오기 기능 추가
 
-### 패키지 관리 및 빌드
-- [034](./devlog/034-package-management.md) - 패키지 생성/내보내기, 빌드 트리거, App/Route 생성 다이얼로그 방식 변경
+#### 탐색기 기능 강화
+- [030](./devlog/v1.0.0/030-auto-reveal.md) - 탐색기 자동 하이라이팅 구현
+- [029](./devlog/v1.0.0/029-portal-app-path-label.md) - Portal App 에디터 경로 개선
+- [028](./devlog/v1.0.0/028-portal-default-folders.md) - Portal 기본 폴더 자동 표시
+- [027](./devlog/v1.0.0/027-multi-select.md) - 다중 선택 기능 추가
+- [026](./devlog/v1.0.0/026-drag-and-drop.md) - 드래그 앤 드롭 기능 추가
 
-### View Type 기능
-- [035](./devlog/035-view-type-selection.md) - View Type 선택 기능 (pug/html), 기본 타입 HTML로 변경
+#### Route 앱 생성 기능
+- [025](./devlog/v1.0.0/025-route-creation.md) - Route 앱 생성 기능 구현
 
-### 프로젝트 내보내기/가져오기
-- [036](./devlog/036-project-export-import.md) - 프로젝트 내보내기 및 .wizproject 파일 가져오기 기능
+#### UI/UX 개선
+- [024](./devlog/v1.0.0/024-source-route-group-removal.md) - Source app/route 그룹 제거
+- [023](./devlog/v1.0.0/023-explorer-ui-cleanup.md) - 탐색기 상단 UI 정리
+- [022](./devlog/v1.0.0/022-portal-folder-icons.md) - Portal 패키지 폴더 아이콘 통일
 
-### 커맨드 팔레트 지원
-- [037](./devlog/037-command-palette.md) - 커맨드 팔레트에서 주요 기능 접근 지원
-- [038](./devlog/038-command-palette-improvements.md) - 커맨드 팔레트 기능 개선 및 버그 수정
+#### Portal App 에디터 및 생성 기능
+- [021](./devlog/v1.0.0/021-portal-route-controller.md) - Portal Route Controller 경로 수정
+- [020](./devlog/v1.0.0/020-portal-app-creation.md) - Portal App 생성 기능
+- [019](./devlog/v1.0.0/019-portal-app-editor.md) - Portal App 에디터 구현
+
+#### 에디터 코드 리팩토링
+- [018](./devlog/v1.0.0/018-editor-refactoring.md) - AppEditorProvider 분리
+
+#### Portal/Packages 개선
+- [017](./devlog/v1.0.0/017-portal-info-editor.md) - Portal Info 에디터 구현
+- [016](./devlog/v1.0.0/016-portal-category.md) - Portal 카테고리 개선
+
+#### Route 앱 지원
+- [015](./devlog/v1.0.0/015-route-ui-improvements.md) - Route 앱 UI 개선
+- [014](./devlog/v1.0.0/014-namespace-sync.md) - Namespace 변경 시 폴더명/ID 자동 변경
+- [013](./devlog/v1.0.0/013-route-info-editor.md) - Route Info 에디터 구현
+- [012](./devlog/v1.0.0/012-route-support.md) - Route 앱 지원 추가
+
+#### 버그 수정 및 개선
+- [011](./devlog/v1.0.0/011-split-view-fix.md) - 창 분할 시 Wiz 탭 복원 버그 수정
+- [010](./devlog/v1.0.0/010-refactoring.md) - 전체 코드 리팩토링
+- [009](./devlog/v1.0.0/009-keyboard-shortcuts-fix.md) - Alt+1-6 단축키 버그 수정
+
+#### 초기 개발 (기반 기능 구현)
+- [008](./devlog/v1.0.0/008-keyboard-shortcuts.md) - Alt+1-6 단축키 구현
+- [007](./devlog/v1.0.0/007-delete.md) - Delete 기능 구현
+- [006](./devlog/v1.0.0/006-new-app.md) - New App 기능 구현
+- [005](./devlog/v1.0.0/005-info-editor.md) - Info Editor 구현
+- [004](./devlog/v1.0.0/004-app-editor-provider.md) - App Editor Provider 구현
+- [003](./devlog/v1.0.0/003-file-system-provider.md) - File System Provider 구현
+- [002](./devlog/v1.0.0/002-tree-view.md) - Tree View 구현
+- [001](./devlog/v1.0.0/001-project-setup.md) - 프로젝트 초기 설정
 
 ---
 
@@ -154,7 +167,9 @@ Project (프로젝트명)
 │       ├── libs/          # 아이콘: library
 │       ├── styles/        # 아이콘: symbol-color
 │       └── ...
+├── config (config/)
 └── project (루트/)
+    └── 기타 파일들 (config 제외)
 ```
 
 ---

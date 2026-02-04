@@ -8,6 +8,9 @@ const WizPathUtils = require('./pathUtils');
 const WizFileUtils = require('./fileUtils');
 const WizUriFactory = require('./uriFactory');
 const WebviewTemplates = require('./webviewTemplates');
+const AppCreator = require('./appCreator');
+const ZipUtils = require('./zipUtils');
+const UploadWebview = require('./uploadWebview');
 
 module.exports = {
     // Constants
@@ -17,5 +20,10 @@ module.exports = {
     WizPathUtils,
     WizFileUtils,
     WizUriFactory,
-    WebviewTemplates
+    WebviewTemplates,
+    
+    // App Creation
+    AppCreator,
+    ZipUtils,
+    UploadWebview
 };

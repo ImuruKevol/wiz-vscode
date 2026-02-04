@@ -47,6 +47,43 @@ class SourceCategory extends CategoryItem {
             folder.contextValue = config.context;
         }
 
+        // 4. Promote angular/libs and angular/styles to source level
+        const angularDir = rawItems.find(i => i.label === 'angular' && i.isDirectory);
+        if (angularDir) {
+            const angularPath = angularDir.resourceUri.fsPath;
+            const promotedFolders = [
+                { label: 'libs', icon: 'library' },
+                { label: 'styles', icon: 'symbol-color' }
+            ];
+            
+            for (const config of promotedFolders) {
+                const folderPath = path.join(angularPath, config.label);
+                if (fs.existsSync(folderPath)) {
+                    const folder = new FileTreeItem(config.label, folderPath, true, false);
+                    folder.iconPath = new vscode.ThemeIcon(config.icon);
+                    folder.contextValue = 'folder';
+                    items.push(folder);
+                }
+            }
+        }
+
+        // 5. Sort items by priority order
+        const priority = ['angular', 'app/page', 'app/component', 'app/layout', 'route', 'model', 'controller', 'assets', 'libs', 'styles'];
+        items.sort((a, b) => {
+            const idxA = priority.indexOf(a.label);
+            const idxB = priority.indexOf(b.label);
+            
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            
+            // Non-priority items: directories first, then alphabetical
+            if (a.isDirectory !== b.isDirectory) {
+                return a.isDirectory ? -1 : 1;
+            }
+            return a.label.localeCompare(b.label);
+        });
+
         return items;
     }
 
@@ -100,22 +137,25 @@ class ProjectCategory extends CategoryItem {
     }
 
     async getChildren() {
-        return this.provider.getFilesAndFolders(this.provider.workspaceRoot, (item) => item !== 'src' && item !== 'exports');
+        return this.provider.getFilesAndFolders(this.provider.workspaceRoot, (item) => item !== 'src' && item !== 'config');
     }
 }
 
-class ExportsCategory extends CategoryItem {
+class ConfigCategory extends CategoryItem {
     constructor(provider) {
-        super('exports', 'exports', new vscode.ThemeIcon('package'));
+        super('config', 'config', new vscode.ThemeIcon('settings-gear'));
         this.provider = provider;
+        this.contextValue = 'configCategory';
+        if (provider.workspaceRoot) {
+            this.resourceUri = vscode.Uri.file(path.join(provider.workspaceRoot, 'config'));
+        }
     }
 
     async getChildren() {
-        if (!this.provider.wizRoot) return [];
-        const exportsPath = path.join(this.provider.wizRoot, 'exports');
-        if (!fs.existsSync(exportsPath)) return [];
-        return this.provider.getFilesAndFolders(exportsPath);
+        const configPath = path.join(this.provider.workspaceRoot, 'config');
+        if (!fs.existsSync(configPath)) return [];
+        return this.provider.getFilesAndFolders(configPath);
     }
 }
 
-module.exports = { SourceCategory, PortalCategory, ProjectCategory, ExportsCategory };
+module.exports = { SourceCategory, PortalCategory, ProjectCategory, ConfigCategory };

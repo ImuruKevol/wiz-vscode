@@ -53,6 +53,50 @@ This is the "Wiz Explorer" VS Code extension designed to manage Wiz Framework pr
 - Press `F5` to launch the "Extension Development Host".
 - Use `Developer: Toggle Developer Tools` in the host window to inspect Webview DOM and console errors.
 
+### Development Log (devlog) Convention
+When the user says "devlog 남겨줘", record all unlogged development changes following this convention:
+
+#### When to Log
+- Changes to `src/` directory files
+- Changes to `package.json`
+
+#### Directory Structure
+```
+devlog/
+├── v{major}.{minor}.{patch}/   # Version folders (e.g., v1.0.0, v1.0.1)
+│   ├── 001-feature-name.md
+│   ├── 002-another-feature.md
+│   └── ...
+```
+
+#### File Naming
+- Format: `{sequence}-{feature-name}.md`
+- Sequence: 3-digit number, continues from previous version (e.g., 039, 040...)
+- Feature name: kebab-case description
+
+#### Log File Template
+```markdown
+# {sequence}. {Feature Title} (v{version})
+
+## 개요
+Brief description of the change.
+
+## 변경 사항
+
+### 1. {Change Category}
+- Detailed bullet points of what changed
+- Include file paths when relevant
+
+### 2. {Another Category}
+- More details...
+```
+
+#### DEVLOG.md Update
+After creating the log file, update `DEVLOG.md`:
+1. Add entry under the appropriate version section
+2. Link format: `- [{sequence}](./devlog/v{version}/{filename}) - {brief description}`
+3. Keep newer entries at the top within each version section
+
 ### Notable files
 - `src/core/constants.js`: centralized icons, file types, and app definitions.
 - `src/editor/editors/editorBase.js`: Shared logic for Webview panel creation and lifecycle.
