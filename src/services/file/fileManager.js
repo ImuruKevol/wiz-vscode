@@ -330,6 +330,92 @@ class FileManager {
         const fileContent = fs.readFileSync(sourcePath);
         await vscode.workspace.fs.writeFile(saveUri, fileContent);
     }
+
+    /**
+     * 파일/폴더 업로드 (Webview 사용)
+     * @param {string} targetDir - 업로드 대상 디렉토리
+     * @param {vscode.ExtensionContext} context - 확장 컨텍스트
+     * @returns {Promise<boolean>} 성공 여부
+     */
+    async upload(targetDir, context) {
+        if (!targetDir) {
+            vscode.window.showErrorMessage('업로드할 폴더를 선택해주세요.');
+            return false;
+        }
+
+        // 디렉토리가 없으면 생성
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        const { UploadWebview } = require('../../core');
+
+        const panel = vscode.window.createWebviewPanel(
+            'wizUpload',
+            '파일 업로드',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                retainContextWhenHidden: true
+            }
+        );
+
+        panel.webview.html = UploadWebview.getMultiUploadHtml({
+            title: '파일 업로드',
+            targetPath: targetDir
+        });
+
+        const onRefresh = this.onRefresh;
+
+        panel.webview.onDidReceiveMessage(
+            async (message) => {
+                switch (message.command) {
+                    case 'uploadFiles':
+                        try {
+                            const files = message.files;
+                            let uploadedCount = 0;
+
+                            for (const fileInfo of files) {
+                                const relativePath = fileInfo.relativePath;
+                                const filePath = path.join(targetDir, relativePath);
+                                const fileDir = path.dirname(filePath);
+
+                                // 디렉토리 생성
+                                if (!fs.existsSync(fileDir)) {
+                                    fs.mkdirSync(fileDir, { recursive: true });
+                                }
+
+                                // Base64 디코딩 및 파일 저장
+                                const buffer = Buffer.from(fileInfo.data, 'base64');
+                                fs.writeFileSync(filePath, buffer);
+                                uploadedCount++;
+                            }
+
+                            panel.webview.postMessage({
+                                command: 'uploadComplete',
+                                message: `${uploadedCount}개 파일 업로드 완료!`
+                            });
+
+                            onRefresh();
+                        } catch (err) {
+                            panel.webview.postMessage({
+                                command: 'uploadError',
+                                message: `업로드 실패: ${err.message}`
+                            });
+                        }
+                        break;
+
+                    case 'close':
+                        panel.dispose();
+                        break;
+                }
+            },
+            undefined,
+            context.subscriptions
+        );
+
+        return true;
+    }
 }
 
 module.exports = FileManager;

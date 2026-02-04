@@ -9,20 +9,22 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
-### v1.0.1 (Configs & Improvements)
+### v1.1.0 (Configs & Improvements & Refactoring)
 
-> 📌 **Commit:** `039-044` - Config 카테고리, 정렬 개선, 다운로드/업로드, 리팩토링
-
-- [044](./devlog/v1.0.1/044-services-hierarchy-restructure.md) - Services 계층 구조 재구성 (7개 폴더 → 3개 계층 폴더)
-- [043](./devlog/v1.0.1/043-services-refactoring.md) - Services 레이어 리팩토링 (비즈니스 로직 분리, 아키텍처 문서화)
-- [042](./devlog/v1.0.1/042-core-refactoring.md) - Core 모듈 리팩토링 (AppCreator, ZipUtils, UploadWebview 클래스 분리)
-- [041](./devlog/v1.0.1/041-download-upload-feature.md) - 다운로드/업로드 기능 구현 (.wizpkg, .wizapp 지원)
-- [040](./devlog/v1.0.1/040-explorer-sorting-improvements.md) - 탐색기 정렬 및 표시 개선
-- [039](./devlog/v1.0.1/039-config-category-update.md) - Config 카테고리 추가 및 탐색기 구조 개선
+- [050](./devlog/v1.1.0/050-explorer-bug-fix.md) - 탐색기 오류 수정 및 정렬 개선
+- [049](./devlog/v1.1.0/049-project-export-download.md) - 프로젝트 내보내기 다운로드 방식 변경
+- [048](./devlog/v1.1.0/048-extension-refactoring.md) - Extension.js 비즈니스 로직 완전 분리
+- [047](./devlog/v1.1.0/047-file-upload-feature.md) - 파일/폴더 업로드 기능 추가
+- [046](./devlog/v1.1.0/046-copilot-category.md) - Copilot 카테고리 추가 (.github 폴더 접근)
+- [045](./devlog/v1.1.0/045-folder-protection.md) - Source/Packages 루트 폴더 보호 기능
+- [044](./devlog/v1.1.0/044-services-hierarchy-restructure.md) - Services 계층 구조 재구성 (7개 폴더 → 3개 계층 폴더)
+- [043](./devlog/v1.1.0/043-services-refactoring.md) - Services 레이어 리팩토링 (비즈니스 로직 분리, 아키텍처 문서화)
+- [042](./devlog/v1.1.0/042-core-refactoring.md) - Core 모듈 리팩토링 (AppCreator, ZipUtils, UploadWebview 클래스 분리)
+- [041](./devlog/v1.1.0/041-download-upload-feature.md) - 다운로드/업로드 기능 구현 (.wizpkg, .wizapp 지원)
+- [040](./devlog/v1.1.0/040-explorer-sorting-improvements.md) - 탐색기 정렬 및 표시 개선
+- [039](./devlog/v1.1.0/039-config-category-update.md) - Config 카테고리 추가 및 탐색기 구조 개선
 
 ### v1.0.0 (Initial Release)
-
-> 📌 **Commit:** `001-038` - 초기 릴리즈
 
 #### 커맨드 팔레트 지원
 - [038](./devlog/v1.0.0/038-command-palette-improvements.md) - 커맨드 팔레트 기능 개선 및 버그 수정

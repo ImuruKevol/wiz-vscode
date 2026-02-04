@@ -21,8 +21,8 @@ class SourceCategory extends CategoryItem {
         
         // 2. Default folders to ensure visible
         const forcedFolders = [
-            { label: 'controller', icon: 'symbol-method', context: 'folder' },
-            { label: 'model', icon: 'symbol-method', context: 'folder' },
+            { label: 'controller', icon: 'symbol-method', context: 'sourceRootFolder' },
+            { label: 'model', icon: 'symbol-method', context: 'sourceRootFolder' },
             { label: 'route', icon: 'circuit-board', context: 'routeGroup' }
         ];
 
@@ -61,7 +61,7 @@ class SourceCategory extends CategoryItem {
                 if (fs.existsSync(folderPath)) {
                     const folder = new FileTreeItem(config.label, folderPath, true, false);
                     folder.iconPath = new vscode.ThemeIcon(config.icon);
-                    folder.contextValue = 'folder';
+                    folder.contextValue = 'sourceRootFolder';
                     items.push(folder);
                 }
             }
@@ -141,6 +141,24 @@ class ProjectCategory extends CategoryItem {
     }
 }
 
+class CopilotCategory extends CategoryItem {
+    constructor(provider) {
+        super('copilot', 'copilot', new vscode.ThemeIcon('copilot'));
+        this.provider = provider;
+        this.contextValue = 'copilotCategory';
+        if (provider.wizRoot) {
+            this.resourceUri = vscode.Uri.file(path.join(provider.wizRoot, '.github'));
+        }
+    }
+
+    async getChildren() {
+        if (!this.provider.wizRoot) return [];
+        const githubPath = path.join(this.provider.wizRoot, '.github');
+        if (!fs.existsSync(githubPath)) return [];
+        return this.provider.getFilesAndFolders(githubPath);
+    }
+}
+
 class ConfigCategory extends CategoryItem {
     constructor(provider) {
         super('config', 'config', new vscode.ThemeIcon('settings-gear'));
@@ -158,4 +176,4 @@ class ConfigCategory extends CategoryItem {
     }
 }
 
-module.exports = { SourceCategory, PortalCategory, ProjectCategory, ConfigCategory };
+module.exports = { SourceCategory, PortalCategory, ProjectCategory, CopilotCategory, ConfigCategory };

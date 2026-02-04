@@ -2,7 +2,7 @@
 
 A comprehensive VS Code extension for managing [Wiz Framework](https://github.com/season-framework/wiz) projects with an enhanced file explorer, specialized editors, and intelligent project navigation.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/season-framework/wiz-vscode)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](https://github.com/season-framework/wiz-vscode)
 [![Wiz](https://img.shields.io/badge/wiz-%3E%3D2.5.0-blue.svg)](https://github.com/season-framework/wiz)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.60+-purple.svg)](https://code.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,12 +18,14 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 ## ✨ Features
 
 ### 🗂️ Smart Project Explorer
-- **Four-Level Structure**: Source, Packages (Portal), Exports, and Project categories
+- **Five-Level Structure**: Source, Packages (Portal), Project, Copilot, and Config categories
 - **App Type Recognition**: Automatic detection of Page, Component, Layout, and Route apps
 - **Virtual Folders**: Display standard folders even when they don't exist yet
 - **Auto-Highlighting**: Automatically reveals active file in the tree view
 - **Drag & Drop**: Move files and folders effortlessly
 - **Multi-Select**: Work with multiple items simultaneously
+- **File Upload**: Upload files and folders via Webview (Remote compatible)
+- **Folder Protection**: Source/Packages root folders protected from accidental deletion
 
 ### ✏️ Specialized Editors
 - **App Info Editor**: Webview-based visual editor for `app.json` configuration
@@ -167,7 +169,7 @@ npm install
 ### From VSIX Package
 
 ```bash
-code --install-extension wiz-vscode-1.0.0.vsix
+code --install-extension wiz-vscode-1.1.0.vsix
 ```
 
 ---
@@ -181,8 +183,9 @@ code --install-extension wiz-vscode-1.0.0.vsix
 3. Navigate through the categorized tree structure:
    - **Source**: Contains `src/` apps (page, component, layout, route)
    - **Packages**: Portal packages from `src/portal/`
-   - **Exports**: Exported packages and projects
    - **Project**: Root-level files and directories
+   - **Copilot**: GitHub Copilot instructions (`.github/`)
+   - **Config**: Project configuration (`project/config/`)
 
 ### Creating New Apps
 
@@ -280,7 +283,7 @@ wiz-vscode/
 │   │   └── treeItems/        # Tree item classes
 │   └── extension.js          # Extension entry point
 ├── resources/                # Icons and assets
-├── devlog/                   # Development logs (001-038)
+├── devlog/                   # Development logs (001-050)
 ├── package.json              # Extension manifest
 └── DEVLOG.md                 # Comprehensive development history
 ```
@@ -313,10 +316,24 @@ Open Developer Tools in Extension Host window
 
 ## 📊 Version History
 
-### v1.0.0 (Current)
+### v1.1.0 (Current)
+
+**New Features**:
+- ✅ Copilot category for `.github` folder access
+- ✅ Config category for project configuration
+- ✅ File/folder upload via Webview (Remote compatible)
+- ✅ Source/Packages root folder protection
+- ✅ Project export with download dialog
+
+**Architecture Improvements**:
+- ✅ Services layer with 3-tier hierarchy (project/app/file)
+- ✅ Business logic completely separated from extension.js
+- ✅ Core utilities refactored (ZipUtils, UploadWebview)
+
+### v1.0.0
 
 **Core Features**:
-- ✅ Tree View with Source/Portal/Exports/Project categories
+- ✅ Tree View with Source/Portal/Project categories
 - ✅ App/Route/Portal App editors with View Type selection
 - ✅ App creation workflows (Source and Package locations)
 - ✅ Drag & drop file operations
@@ -345,12 +362,13 @@ Open Developer Tools in Extension Host window
 
 Detailed development logs are maintained in [devlog/](./devlog/) directory.
 
-**Recent Updates**:
-- **038**: Command palette improvements and bug fixes
-- **037**: Command palette feature addition
-- **036**: Project export/import functionality
-- **035**: View Type selection (HTML/Pug)
-- **034**: Package management and build trigger
+**Recent Updates (v1.1.0)**:
+- **050**: Explorer bug fixes and sorting improvements
+- **049**: Project export with download dialog
+- **048**: Extension.js business logic separation
+- **047**: File/folder upload feature
+- **046**: Copilot category addition
+- **045**: Source/Packages folder protection
 
 [View Full Development History →](./DEVLOG.md)
 
@@ -360,7 +378,6 @@ Detailed development logs are maintained in [devlog/](./devlog/) directory.
 
 - Validate MCP features and improve Agent compatibility
 - Agent Guide documentation for WIZ CLI and main features
-- Drag & Drop resource file/folder upload
 - Develop wiz server cache management features (Wiz library version update expected)
 
 ---

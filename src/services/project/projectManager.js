@@ -117,34 +117,55 @@ class ProjectManager {
     }
 
     /**
-     * 프로젝트 내보내기 (wiz CLI 사용)
+     * 프로젝트 내보내기 (wiz CLI 사용, 다운로드 다이얼로그)
      * @param {string} projectName - 내보낼 프로젝트 이름
+     * @returns {Promise<boolean>} 성공 여부
      */
     async exportProject(projectName) {
-        const exportsPath = path.join(this.wizRoot, 'exports');
-        if (!fs.existsSync(exportsPath)) {
-            fs.mkdirSync(exportsPath, { recursive: true });
-        }
+        const os = require('os');
+        const tmpDir = os.tmpdir();
+        const tmpOutputPath = path.join(tmpDir, `wiz_export_${Date.now()}_${projectName}`);
 
-        const outputPath = path.join(exportsPath, projectName);
+        // 저장 다이얼로그 표시
+        const saveUri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(path.join(os.homedir(), `${projectName}.wizproject`)),
+            filters: { 'Wiz Project': ['wizproject'] },
+            title: '프로젝트 내보내기'
+        });
 
-        await vscode.window.withProgress({
+        if (!saveUri) return false;
+
+        return await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: `프로젝트 '${projectName}' 내보내는 중...`,
             cancellable: false
         }, async () => {
             try {
-                const command = `wiz project export --project=${projectName} --output="${outputPath}"`;
+                // wiz CLI로 tmp 폴더에 내보내기
+                const command = `wiz project export --project=${projectName} --output="${tmpOutputPath}"`;
                 this.log(`[Export] ${command}`);
 
                 await exec(command, { cwd: this.wizRoot });
 
-                this.log(`[Export] 완료: ${outputPath}`);
-                vscode.window.showInformationMessage(`프로젝트 '${projectName}'가 exports 폴더로 내보내졌습니다.`);
-                this.onRefresh();
+                // tmp 폴더의 .wizproject 파일을 사용자가 선택한 위치로 복사
+                const exportedFile = `${tmpOutputPath}.wizproject`;
+                if (fs.existsSync(exportedFile)) {
+                    const fileContent = fs.readFileSync(exportedFile);
+                    await vscode.workspace.fs.writeFile(saveUri, fileContent);
+                    
+                    // tmp 파일 정리
+                    fs.unlinkSync(exportedFile);
+                    
+                    this.log(`[Export] 완료: ${saveUri.fsPath}`);
+                    vscode.window.showInformationMessage(`프로젝트 '${projectName}'가 내보내졌습니다.`);
+                    return true;
+                } else {
+                    throw new Error('내보내기 파일이 생성되지 않았습니다.');
+                }
             } catch (err) {
                 this.log(`[Export] 실패: ${err.message}`);
                 vscode.window.showErrorMessage(`프로젝트 내보내기 실패: ${err.message}`);
+                return false;
             }
         });
     }
@@ -303,6 +324,111 @@ class ProjectManager {
             this.outputChannel.appendLine(message);
             this.outputChannel.show(true);
         }
+    }
+
+    /**
+     * 프로젝트 관리 메뉴 표시
+     * @param {string} currentProject - 현재 활성 프로젝트
+     * @returns {Promise<{action: string, projectName?: string}|null>}
+     */
+    async showProjectMenu(currentProject) {
+        if (!this.wizRoot) {
+            vscode.window.showInformationMessage('워크스페이스가 열려있지 않습니다.');
+            return null;
+        }
+
+        if (!this.ensureProjectFolder()) return null;
+
+        const projects = this.getProjectList();
+
+        const items = [
+            { label: '$(cloud-download) 프로젝트 불러오기 (Git)', description: 'Git 저장소 복제', action: 'import' },
+            { label: '$(file-zip) 프로젝트 파일 불러오기 (.wizproject)', description: '로컬 파일에서 생성', action: 'importFile' },
+            { label: '$(package) 프로젝트 내보내기', description: '.wizproject 파일 다운로드', action: 'export' },
+            { label: '$(trash) 프로젝트 삭제하기', description: '로컬 프로젝트 폴더 삭제', action: 'delete' },
+            { label: '', kind: vscode.QuickPickItemKind.Separator },
+            ...projects.map(p => ({ label: `$(folder) ${p}`, action: 'switch', projectName: p }))
+        ];
+
+        const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: '프로젝트 선택 또는 관리',
+            title: '프로젝트 전환'
+        });
+
+        if (!selected) return null;
+
+        // switch 액션은 바로 반환
+        if (selected.action === 'switch') {
+            return { action: 'switch', projectName: selected.projectName };
+        }
+
+        // delete 액션 처리
+        if (selected.action === 'delete') {
+            const projectToDelete = await this.selectProject('프로젝트 삭제', '삭제할 프로젝트 선택 (주의: 실행 즉시 삭제됩니다)');
+            if (!projectToDelete) return null;
+
+            const result = await this.deleteProject(projectToDelete, currentProject);
+            if (result.success) {
+                return { action: 'delete', projectName: result.newCurrentProject };
+            }
+            return null;
+        }
+
+        // export 액션 처리
+        if (selected.action === 'export') {
+            const projectToExport = await this.selectProject('프로젝트 내보내기', '내보낼 프로젝트 선택');
+            if (!projectToExport) return null;
+            await this.exportProject(projectToExport);
+            return { action: 'export' };
+        }
+
+        // importFile 액션 처리
+        if (selected.action === 'importFile') {
+            const filePath = await this.selectProjectFile();
+            if (!filePath) return null;
+
+            const path = require('path');
+            const projectName = await this.promptProjectName({
+                title: '새 프로젝트 이름(Namespace) 입력',
+                value: path.basename(filePath, '.wizproject')
+            });
+            if (!projectName) return null;
+
+            const success = await this.importFromFile(filePath, projectName);
+            if (success) {
+                const choice = await vscode.window.showInformationMessage(
+                    `프로젝트 '${projectName}'를 성공적으로 가져왔습니다. 전환하시겠습니까?`,
+                    '예', '아니오'
+                );
+                if (choice === '예') {
+                    return { action: 'importFile', projectName };
+                }
+            }
+            return { action: 'importFile' };
+        }
+
+        // import (Git) 액션 처리
+        if (selected.action === 'import') {
+            const projectName = await this.promptProjectName();
+            if (!projectName) return null;
+
+            const gitUrl = await this.promptGitUrl();
+            if (!gitUrl) return null;
+
+            const success = await this.importFromGit(gitUrl, projectName);
+            if (success) {
+                const choice = await vscode.window.showInformationMessage(
+                    `프로젝트 '${projectName}'를 성공적으로 불러왔습니다. 전환하시겠습니까?`,
+                    '예', '아니오'
+                );
+                if (choice === '예') {
+                    return { action: 'import', projectName };
+                }
+            }
+            return { action: 'import' };
+        }
+
+        return null;
     }
 }
 

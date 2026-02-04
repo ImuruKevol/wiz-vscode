@@ -1,21 +1,26 @@
 /**
  * NavigationManager - 앱 탐색 및 네비게이션 관리
- * 앱 검색, 위치 선택, 템플릿 복사 등
+ * 앱 검색, 위치 선택, 템플릿 복사, 파일 전환 등
  */
 
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+const { WizPathUtils, WizFileUtils, WizUriFactory } = require('../../core');
 
 class NavigationManager {
     /**
      * @param {Object} options
      * @param {Function} options.getWorkspaceRoot - 워크스페이스 루트 반환 함수
      * @param {Function} options.openInfoEditor - Info 에디터 열기 콜백
+     * @param {Function} options.getActiveEditor - 활성 에디터 정보 반환 콜백
+     * @param {Function} options.closeWebview - Webview 닫기 콜백
      */
     constructor(options = {}) {
         this.getWorkspaceRoot = options.getWorkspaceRoot || (() => undefined);
         this.openInfoEditor = options.openInfoEditor || (() => {});
+        this.getActiveEditor = options.getActiveEditor || (() => null);
+        this.closeWebview = options.closeWebview || (() => {});
     }
 
     /**
@@ -312,6 +317,98 @@ class NavigationManager {
         }
 
         return { type: 'package', path: packageRoutePath };
+    }
+
+    /**
+     * 현재 앱 경로 해석
+     * @returns {string|null} 앱 디렉토리 경로
+     */
+    resolveCurrentAppPath() {
+        const editor = vscode.window.activeTextEditor;
+
+        if (editor) {
+            const uri = editor.document.uri;
+            if (uri.scheme === 'wiz') {
+                const realPath = WizPathUtils.getRealPathFromUri(uri);
+                return realPath ? path.dirname(realPath) : null;
+            } else if (uri.scheme === 'file') {
+                return path.dirname(uri.fsPath);
+            }
+        }
+
+        // Webview가 활성화된 경우
+        const activeEditor = this.getActiveEditor();
+        if (activeEditor?.panel?.active) {
+            return activeEditor.appPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * 파일 타입 전환
+     * @param {string} type - 파일 타입 (info, controller, ui, component, scss, api, socket)
+     * @returns {Promise<void>}
+     */
+    async switchFile(type) {
+        const dirPath = this.resolveCurrentAppPath();
+        if (!dirPath) return;
+
+        // INFO 탭은 Webview로 처리
+        if (type === 'info') {
+            this.openInfoEditor(dirPath);
+            return;
+        }
+
+        const files = WizFileUtils.readAppFiles(dirPath);
+        const target = files[type];
+        
+        if (!target) {
+            vscode.window.setStatusBarMessage(`Invalid file type: ${type}`, 3000);
+            return;
+        }
+
+        // 파일이 없으면 생성
+        if (!target.exists) {
+            if (!WizFileUtils.safeWriteFile(target.fullPath, '')) {
+                vscode.window.showErrorMessage(`파일 생성 실패`);
+                return;
+            }
+        }
+
+        const wizUri = WizUriFactory.fromAppPath(dirPath, target.fullPath, target.label);
+        const doc = await vscode.workspace.openTextDocument(wizUri);
+        
+        const language = WizFileUtils.getLanguageFromExtension(target.fullPath);
+        if (language) {
+            vscode.languages.setTextDocumentLanguage(doc, language);
+        }
+
+        this.closeWebview();
+        await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Active });
+    }
+
+    /**
+     * 앱 파일 메뉴 표시
+     * @returns {Promise<void>}
+     */
+    async showAppMenu() {
+        const dirPath = this.resolveCurrentAppPath();
+        if (!dirPath) return;
+        
+        const files = WizFileUtils.readAppFiles(dirPath);
+        const items = Object.entries(files)
+            .filter(([_, v]) => v.exists)
+            .map(([key, val]) => ({
+                label: `${val.icon} ${key.toUpperCase()}`,
+                description: val.fileName,
+                type: key
+            }));
+        
+        const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Switch to...' });
+        if (selected) {
+            await this.switchFile(selected.type);
+        }
     }
 }
 

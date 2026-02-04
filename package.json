@@ -2,7 +2,7 @@
   "name": "wiz-vscode",
   "displayName": "Wiz VSCode Explorer",
   "description": "A comprehensive VS Code extension for managing Wiz Framework projects",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "season-framework",
   "repository": {
     "type": "git",
@@ -221,6 +221,11 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "wizExplorer.uploadFile",
+        "title": "업로드...",
+        "icon": "$(cloud-upload)"
+      },
+      {
         "command": "wizExplorer.rename",
         "title": "이름 변경",
         "icon": "$(edit)"
@@ -390,22 +395,22 @@
         },
         {
           "command": "wizExplorer.newFile",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory)",
+          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "1_modification"
         },
         {
           "command": "wizExplorer.newFolder",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory)",
+          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "1_modification"
         },
         {
           "command": "wizExplorer.copy",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == configCategory)",
+          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
           "group": "2_clipboard"
         },
         {
           "command": "wizExplorer.paste",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory)",
+          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "2_clipboard"
         },
         {
@@ -425,7 +430,12 @@
         },
         {
           "command": "wizExplorer.downloadFile",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == portalPackage || viewItem == appItem)",
+          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "group": "z_reveal"
+        },
+        {
+          "command": "wizExplorer.uploadFile",
+          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "z_reveal"
         }
       ],

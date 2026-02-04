@@ -6,7 +6,7 @@ const FileTreeItem = require('./treeItems/fileTreeItem');
 const AppGroupItem = require('./treeItems/appGroupItem');
 const EmptyItem = require('./treeItems/emptyItem');
 const AppPatternProcessor = require('./appPatternProcessor');
-const { SourceCategory, PortalCategory, ProjectCategory, ConfigCategory } = require('./models/categoryHandlers');
+const { SourceCategory, PortalCategory, ProjectCategory, CopilotCategory, ConfigCategory } = require('./models/categoryHandlers');
 const { FLAT_APP_TYPES, APP_TYPES, WizPathUtils } = require('../core');
 
 class FileExplorerProvider {
@@ -25,6 +25,7 @@ class FileExplorerProvider {
             new SourceCategory(this),
             new PortalCategory(this),
             new ProjectCategory(this),
+            new CopilotCategory(this),
             new ConfigCategory(this)
         ];
     }
@@ -120,13 +121,6 @@ class FileExplorerProvider {
                     new EmptyItem('다른 프로젝트 선택...', 'switchProject')
                 ];
             }
-
-            // Update ConfigCategory resourceUri dynamically
-            const configCategory = this.categories.find(c => c.id === 'config');
-            if (configCategory && this.workspaceRoot) {
-                configCategory.resourceUri = vscode.Uri.file(path.join(this.workspaceRoot, 'config'));
-            }
-
             return this.categories;
         }
 
@@ -180,8 +174,8 @@ class FileExplorerProvider {
                     }
                 }
 
-                // Sort: info, app, route, model, controller, assets, libs, styles, README.md, then others
-                const priority = ['info', 'app', 'route', 'model', 'controller', 'assets', 'libs', 'styles', 'README.md'];
+                // Sort: info, app, route, controller, model, assets, libs, styles, then others
+                const priority = ['info', 'app', 'route', 'controller', 'model', 'assets', 'libs', 'styles'];
                 
                 items.sort((a, b) => {
                     const idxA = priority.indexOf(a.label);
@@ -259,14 +253,6 @@ class FileExplorerProvider {
                 fs.mkdirSync(dirPath, { recursive: true });
                 this.refresh();
                 return [];
-            }
-
-            // Hide libs, styles from angular folder (promoted to source level)
-            if (folderName === 'angular') {
-                const parentDir = path.dirname(dirPath);
-                if (path.basename(parentDir) === 'src') {
-                    items = items.filter(item => !['libs', 'styles'].includes(item.label));
-                }
             }
 
             // Flat App Types Handling (e.g. route)

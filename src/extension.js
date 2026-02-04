@@ -12,7 +12,7 @@ const FileExplorerProvider = require('./explorer/fileExplorerProvider');
 const AppEditorProvider = require('./editor/appEditorProvider');
 const AppContextListener = require('./editor/appContextListener');
 const WizFileSystemProvider = require('./editor/wizFileSystemProvider');
-const { WizPathUtils, WizFileUtils, WizUriFactory, FILE_TYPE_MAPPING, APP_TEMPLATES } = require('./core');
+const { WizPathUtils } = require('./core');
 const { SourceManager, PackageManager, ProjectManager, FileManager, BuildManager, McpManager, NavigationManager } = require('./services');
 
 /**
@@ -112,66 +112,6 @@ function activate(context) {
     );
 
 
-    // ==================== File Switching ====================
-    async function switchFile(type) {
-        let dirPath = resolveCurrentAppPath();
-        if (!dirPath) return;
-
-        // INFO 탭은 Webview로 처리
-        if (type === 'info') {
-            appEditorProvider.openInfoEditor(dirPath, appContextListener);
-            return;
-        }
-
-        const files = WizFileUtils.readAppFiles(dirPath);
-        const target = files[type];
-        
-        if (!target) {
-            vscode.window.setStatusBarMessage(`Invalid file type: ${type}`, 3000);
-            return;
-        }
-
-        // 파일이 없으면 생성
-        if (!target.exists) {
-            if (!WizFileUtils.safeWriteFile(target.fullPath, '')) {
-                vscode.window.showErrorMessage(`파일 생성 실패`);
-                return;
-            }
-        }
-
-        const wizUri = WizUriFactory.fromAppPath(dirPath, target.fullPath, target.label);
-        const doc = await vscode.workspace.openTextDocument(wizUri);
-        
-        const language = WizFileUtils.getLanguageFromExtension(target.fullPath);
-        if (language) {
-            vscode.languages.setTextDocumentLanguage(doc, language);
-        }
-
-        appEditorProvider.closeWebview?.() || (appEditorProvider.currentWebviewPanel?.dispose());
-        await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Active });
-    }
-
-    function resolveCurrentAppPath() {
-        const editor = vscode.window.activeTextEditor;
-
-        if (editor) {
-            const uri = editor.document.uri;
-            if (uri.scheme === 'wiz') {
-                const realPath = WizPathUtils.getRealPathFromUri(uri);
-                return realPath ? path.dirname(realPath) : null;
-            } else if (uri.scheme === 'file') {
-                return path.dirname(uri.fsPath);
-            }
-        }
-
-        // Webview가 활성화된 경우
-        if (appEditorProvider.activeEditor?.panel?.active) {
-            return appEditorProvider.activeEditor.appPath;
-        }
-
-        return null;
-    }
-
     // ==================== Service Managers ====================
     const buildManager = new BuildManager({
         getWizRoot: () => workspaceRoot,
@@ -210,7 +150,9 @@ function activate(context) {
 
     const navigationManager = new NavigationManager({
         getWorkspaceRoot: () => fileExplorerProvider.workspaceRoot,
-        openInfoEditor: (appPath) => appEditorProvider.openInfoEditor(appPath, appContextListener)
+        openInfoEditor: (appPath) => appEditorProvider.openInfoEditor(appPath, appContextListener),
+        getActiveEditor: () => appEditorProvider.activeEditor,
+        closeWebview: () => appEditorProvider.closeWebview?.() || appEditorProvider.currentWebviewPanel?.dispose()
     });
 
     // Inject build trigger to AppEditorProvider
@@ -261,128 +203,40 @@ function activate(context) {
         ['wizExplorer.build', () => buildManager.showBuildMenu()],
         
         // File switch commands
-        ['wizExplorer.switch.info', () => switchFile('info')],
-        ['wizExplorer.switch.controller', () => switchFile('controller')],
-        ['wizExplorer.switch.ui', () => switchFile('ui')],
-        ['wizExplorer.switch.component', () => switchFile('component')],
-        ['wizExplorer.switch.scss', () => switchFile('scss')],
-        ['wizExplorer.switch.api', () => switchFile('api')],
-        ['wizExplorer.switch.socket', () => switchFile('socket')],
+        ['wizExplorer.switch.info', () => navigationManager.switchFile('info')],
+        ['wizExplorer.switch.controller', () => navigationManager.switchFile('controller')],
+        ['wizExplorer.switch.ui', () => navigationManager.switchFile('ui')],
+        ['wizExplorer.switch.component', () => navigationManager.switchFile('component')],
+        ['wizExplorer.switch.scss', () => navigationManager.switchFile('scss')],
+        ['wizExplorer.switch.api', () => navigationManager.switchFile('api')],
+        ['wizExplorer.switch.socket', () => navigationManager.switchFile('socket')],
         
         // Active state commands (same behavior)
-        ['wizExplorer.switch.info.active', () => switchFile('info')],
-        ['wizExplorer.switch.controller.active', () => switchFile('controller')],
-        ['wizExplorer.switch.ui.active', () => switchFile('ui')],
-        ['wizExplorer.switch.component.active', () => switchFile('component')],
-        ['wizExplorer.switch.scss.active', () => switchFile('scss')],
-        ['wizExplorer.switch.api.active', () => switchFile('api')],
-        ['wizExplorer.switch.socket.active', () => switchFile('socket')],
+        ['wizExplorer.switch.info.active', () => navigationManager.switchFile('info')],
+        ['wizExplorer.switch.controller.active', () => navigationManager.switchFile('controller')],
+        ['wizExplorer.switch.ui.active', () => navigationManager.switchFile('ui')],
+        ['wizExplorer.switch.component.active', () => navigationManager.switchFile('component')],
+        ['wizExplorer.switch.scss.active', () => navigationManager.switchFile('scss')],
+        ['wizExplorer.switch.api.active', () => navigationManager.switchFile('api')],
+        ['wizExplorer.switch.socket.active', () => navigationManager.switchFile('socket')],
 
         // App Menu
-        ['wizExplorer.showAppMenu', async () => {
-            const dirPath = resolveCurrentAppPath();
-            if (!dirPath) return;
-            
-            const files = WizFileUtils.readAppFiles(dirPath);
-            const items = Object.entries(files)
-                .filter(([_, v]) => v.exists)
-                .map(([key, val]) => ({
-                    label: `${val.icon} ${key.toUpperCase()}`,
-                    description: val.fileName,
-                    type: key
-                }));
-            
-            const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Switch to...' });
-            if (selected) {
-                switchFile(selected.type);
-            }
-        }],
+        ['wizExplorer.showAppMenu', () => navigationManager.showAppMenu()],
 
         // Project switching
         ['wizExplorer.switchProject', async () => {
-            if (!workspaceRoot) {
-                vscode.window.showInformationMessage('워크스페이스가 열려있지 않습니다.');
-                return;
-            }
+            const result = await projectManager.showProjectMenu(currentProject);
+            if (!result) return;
 
-            if (!projectManager.ensureProjectFolder()) return;
-
-            const projects = projectManager.getProjectList();
-
-            const items = [
-                { label: '$(cloud-download) 프로젝트 불러오기 (Git)', description: 'Git 저장소 복제', action: 'import' },
-                { label: '$(file-zip) 프로젝트 파일 불러오기 (.wizproject)', description: '로컬 파일에서 생성', action: 'importFile' },
-                { label: '$(package) 프로젝트 내보내기', description: 'exports 폴더로 내보내기', action: 'export' },
-                { label: '$(trash) 프로젝트 삭제하기', description: '로컬 프로젝트 폴더 삭제', action: 'delete' },
-                { label: '', kind: vscode.QuickPickItemKind.Separator },
-                ...projects.map(p => ({ label: `$(folder) ${p}`, action: 'switch', projectName: p }))
-            ];
-
-            const selected = await vscode.window.showQuickPick(items, {
-                placeHolder: '프로젝트 선택 또는 관리',
-                title: '프로젝트 전환'
-            });
-
-            if (!selected) return;
-
-            if (selected.action === 'switch') {
-                currentProject = selected.projectName;
+            if (result.action === 'switch' && result.projectName) {
+                currentProject = result.projectName;
                 updateProjectRoot();
-            } else if (selected.action === 'delete') {
-                const projectToDelete = await projectManager.selectProject('프로젝트 삭제', '삭제할 프로젝트 선택 (주의: 실행 즉시 삭제됩니다)');
-                if (!projectToDelete) return;
-
-                const result = await projectManager.deleteProject(projectToDelete, currentProject);
-                if (result.success && result.newCurrentProject !== currentProject) {
-                    currentProject = result.newCurrentProject;
-                    updateProjectRoot();
-                }
-
-            } else if (selected.action === 'export') {
-                const projectToExport = await projectManager.selectProject('프로젝트 내보내기', '내보낼 프로젝트 선택');
-                if (!projectToExport) return;
-                await projectManager.exportProject(projectToExport);
-
-            } else if (selected.action === 'importFile') {
-                const filePath = await projectManager.selectProjectFile();
-                if (!filePath) return;
-
-                const projectName = await projectManager.promptProjectName({
-                    title: '새 프로젝트 이름(Namespace) 입력',
-                    value: path.basename(filePath, '.wizproject')
-                });
-                if (!projectName) return;
-
-                const success = await projectManager.importFromFile(filePath, projectName);
-                if (success) {
-                    const choice = await vscode.window.showInformationMessage(
-                        `프로젝트 '${projectName}'를 성공적으로 가져왔습니다. 전환하시겠습니까?`,
-                        '예', '아니오'
-                    );
-                    if (choice === '예') {
-                        currentProject = projectName;
-                        updateProjectRoot();
-                    }
-                }
-
-            } else if (selected.action === 'import') {
-                const projectName = await projectManager.promptProjectName();
-                if (!projectName) return;
-
-                const gitUrl = await projectManager.promptGitUrl();
-                if (!gitUrl) return;
-
-                const success = await projectManager.importFromGit(gitUrl, projectName);
-                if (success) {
-                    const choice = await vscode.window.showInformationMessage(
-                        `프로젝트 '${projectName}'를 성공적으로 불러왔습니다. 전환하시겠습니까?`,
-                        '예', '아니오'
-                    );
-                    if (choice === '예') {
-                        currentProject = projectName;
-                        updateProjectRoot();
-                    }
-                }
+            } else if (result.action === 'delete' && result.projectName && result.projectName !== currentProject) {
+                currentProject = result.projectName;
+                updateProjectRoot();
+            } else if ((result.action === 'import' || result.action === 'importFile') && result.projectName) {
+                currentProject = result.projectName;
+                updateProjectRoot();
             }
         }],
 
@@ -500,6 +354,14 @@ function activate(context) {
             });
         }],
 
+        ['wizExplorer.uploadFile', async (node) => {
+            if (!node || !node.resourceUri) {
+                vscode.window.showErrorMessage('업로드할 폴더를 선택해주세요.');
+                return;
+            }
+            await fileManager.upload(node.resourceUri.fsPath, context);
+        }],
+
         ['wizExplorer.paste', async (node) => {
             await fileManager.paste(node?.resourceUri?.fsPath);
         }],
@@ -585,7 +447,7 @@ function activate(context) {
 
         // Open App Info for current file
         ['wizExplorer.openAppInfo', () => {
-            const dirPath = resolveCurrentAppPath();
+            const dirPath = navigationManager.resolveCurrentAppPath();
             if (!dirPath) {
                 vscode.window.showWarningMessage('현재 열린 앱 파일이 없습니다.');
                 return;
@@ -595,7 +457,7 @@ function activate(context) {
 
         // Copy template of current app
         ['wizExplorer.copyCurrentTemplate', () => {
-            const dirPath = resolveCurrentAppPath();
+            const dirPath = navigationManager.resolveCurrentAppPath();
             navigationManager.copyTemplate(dirPath);
         }],
 

@@ -1,4 +1,4 @@
-# 043. Services 레이어 리팩토링 (v1.0.1)
+# 043. Services 레이어 리팩토링
 
 ## 개요
 extension.js에 집중되어 있던 비즈니스 로직을 `src/services/` 레이어로 분리하여 관심사 분리(Separation of Concerns) 원칙을 적용했습니다.
