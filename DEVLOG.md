@@ -9,6 +9,10 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
+### v1.1.1 (ktw updated)
+
+- [051](./devlog/v1.1.1/051-auto-build-condition-fix.md) - Wiz 탭 활성화 이후 자동 빌드 조건 처리 개선
+
 ### v1.1.0 (Configs & Improvements & Refactoring)
 
 - [050](./devlog/v1.1.0/050-explorer-bug-fix.md) - 탐색기 오류 수정 및 정렬 개선
