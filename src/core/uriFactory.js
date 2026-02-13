@@ -19,8 +19,8 @@ class WizUriFactory {
     static create(realPath, category, appTitle, typeLabel) {
         const encodedPath = WizPathUtils.encodePathToBase64(realPath);
         const label = `${appTitle} [${typeLabel}]`;
-        const normalizedPath = realPath.replace(/\\/g, '/');
-        const uriPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+        const safeLabel = label.replace(/[\\/]/g, ' ');
+        const uriPath = `/${safeLabel}`;
         
         return vscode.Uri.from({
             scheme: 'wiz',

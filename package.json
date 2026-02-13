@@ -17,7 +17,10 @@
   ],
   "activationEvents": [
     "onView:wizExplorer",
-    "workspaceContains:**/project/*/src"
+    "workspaceContains:**/project/*/src",
+    "onCommand:wizExplorer.navigatePrevious",
+    "onCommand:wizExplorer.navigateNext",
+    "onCommand:wizExplorer.openInSplit"
   ],
   "main": "./src/extension.js",
   "contributes": {
@@ -194,6 +197,18 @@
       {
         "command": "wizExplorer.switch.socket",
         "title": "Socket"
+      },
+      {
+        "command": "wizExplorer.navigatePrevious",
+        "title": "Wiz: Navigate Previous File"
+      },
+      {
+        "command": "wizExplorer.navigateNext",
+        "title": "Wiz: Navigate Next File"
+      },
+      {
+        "command": "wizExplorer.openInSplit",
+        "title": "Wiz: Open Current File in Split"
       },
       {
         "command": "wizExplorer.newApp",
@@ -622,6 +637,18 @@
           "when": "false"
         },
         {
+          "command": "wizExplorer.navigatePrevious",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.navigateNext",
+          "when": "false"
+        },
+        {
+          "command": "wizExplorer.openInSplit",
+          "when": "false"
+        },
+        {
           "command": "wizExplorer.newApp",
           "when": "false"
         },
@@ -641,39 +668,21 @@
     },
     "keybindings": [
       {
-        "command": "wizExplorer.switch.info",
-        "key": "alt+1",
-        "mac": "opt+1",
+        "command": "wizExplorer.navigatePrevious",
+        "key": "alt+a",
+        "mac": "alt+a",
         "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
       },
       {
-        "command": "wizExplorer.switch.ui",
-        "key": "alt+2",
-        "mac": "opt+2",
+        "command": "wizExplorer.navigateNext",
+        "key": "alt+s",
+        "mac": "alt+s",
         "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
       },
       {
-        "command": "wizExplorer.switch.component",
-        "key": "alt+3",
-        "mac": "opt+3",
-        "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
-      },
-      {
-        "command": "wizExplorer.switch.scss",
-        "key": "alt+4",
-        "mac": "opt+4",
-        "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
-      },
-      {
-        "command": "wizExplorer.switch.api",
-        "key": "alt+5",
-        "mac": "opt+5",
-        "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
-      },
-      {
-        "command": "wizExplorer.switch.socket",
-        "key": "alt+6",
-        "mac": "opt+6",
+        "command": "wizExplorer.openInSplit",
+        "key": "alt+t",
+        "mac": "alt+t",
         "when": "wizExplorer:isAppFile || resourceScheme == 'wiz'"
       }
     ],

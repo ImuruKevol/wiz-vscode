@@ -281,6 +281,11 @@ function activate(context) {
         ['wizExplorer.switch.api.active', () => navigationManager.switchFile('api')],
         ['wizExplorer.switch.socket.active', () => navigationManager.switchFile('socket')],
 
+        // Keyboard navigation commands
+        ['wizExplorer.navigatePrevious', () => navigationManager.navigateFile('previous')],
+        ['wizExplorer.navigateNext', () => navigationManager.navigateFile('next')],
+        ['wizExplorer.openInSplit', () => navigationManager.openCurrentInSplit()],
+
         // App Menu
         ['wizExplorer.showAppMenu', () => navigationManager.showAppMenu()],
 
