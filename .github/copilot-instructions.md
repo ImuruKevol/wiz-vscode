@@ -104,6 +104,143 @@ After creating the log file, update `DEVLOG.md`:
 2. Link format: `- [{sequence}](./devlog/v{version}/{filename}) - {brief description}`
 3. Keep newer entries at the top within each version section
 
+### Task-Based Work Management
+
+When the user gives a work instruction without specific details — such as **"do the task"**, **"proceed with todo"**, **"작업 수행해줘"**, **"todo 작업 진행해줘"** — read `.github/task/todo.md` and execute the defined tasks in order. See the **Task-Based Work Management (Details)** section below for full rules.
+
+---
+
+## Task-Based Work Management (Details)
+
+### Directory Structure
+
+```
+.github/task/
+├── todo.md              # Task list (to-do)
+├── worked/              # Completed task archive
+│   ├── FN-20260222-0001.md
+│   ├── FN-20260222-0002.md
+│   └── ...
+└── reviewed/            # Archive moved after review cleanup
+    ├── FN-20260222-0001.md
+    └── ...
+```
+
+### todo.md Format
+
+Tasks are separated by `#` headings with a **task number**. The task number follows the format `FN-{YYYYMMDD}-{NNNN}`.
+
+```markdown
+# FN-20260222-0001: Endpoint Settings / Variables Tab
+- Implement toggle-style selection UI for actions in API parameters (since actions have fixed values)
+
+# FN-20260222-0002: API Spec & Test Tab
+- Implement actual API connection and result display in the API Spec & Test screen
+```
+
+### Task Execution Flow
+
+When the user gives a work instruction, follow this sequence:
+
+1. **Read todo.md**: Read `.github/task/todo.md` to identify the task list.
+2. **Execute task**: Perform tasks in order by task number (or only the specified task if the user names a specific number). Each task must follow the development principles defined in this document.
+3. **Write Devlog**: After completing a task, create a devlog entry following the Development Log (devlog) Convention section above.
+4. **Create worked archive**: Create a per-task-number file in `.github/task/worked/`.
+5. **Clean up todo.md**: Remove the completed task entry from `todo.md`.
+6. **Maintain dummy template**: If all items are removed and `todo.md` becomes empty, leave a dummy template with the **next sequence number** after the last archived task number.
+   ```markdown
+   # FN-20260222-0004: (Next task title)
+   - Describe the task here
+   ```
+   - Example: If `FN-20260222-0003` was the last completed → leave `FN-20260222-0004` as the template.
+   - This allows the next sequential number to be immediately visible when adding new tasks.
+
+### worked Archive File Format
+
+Completed tasks are recorded in `.github/task/worked/{task-number}.md` using this format:
+
+```markdown
+# {task-number}: {Task Title}
+
+## Original Task Description
+{Copy the original content from todo.md exactly as-is}
+
+## Summary of Work Done
+{Concise summary of what was implemented and how}
+
+## Related Devlog
+- **Date**: {YYYY-MM-DD}
+- **Devlog ID**: {NNN}
+- **Detail File**: `devlog/v{version}/{NNN}-{slug}.md`
+```
+
+> ⚠️ **Original Preservation Principle**: The `## Original Task Description` section must contain the **exact original text** from `todo.md` — do not summarize, reorganize, or rephrase. Preserve line breaks, indentation, and markdown formatting as-is. Arbitrary abbreviation or restructuring is prohibited.
+
+### Adding New Todo Items
+
+When the user says **"add to todo"**, **"register a task"**, **"todo에 추가해줘"**, **"할 일 등록해줘"**, etc.:
+
+1. Read `.github/task/todo.md` to check existing task numbers.
+2. Generate a task number in `FN-{YYYYMMDD}-{NNNN}` format.
+   - **YYYYMMDD**: Current date
+   - **NNNN**: Zero-padded 4-digit sequence for that date (last existing number for the same date + 1)
+   - Examples: `FN-20260222-0001`, `FN-20260222-0002`
+3. Organize the user's request into a `# FN-{number}: {Title}` heading with sub-items and append it to `todo.md`.
+
+```markdown
+# FN-20260222-0003: Explorer Menu Updates
+- Rename resource group labels
+- Add namespace detail page
+```
+
+### Executing a Specific Task
+
+When the user mentions a specific task number, execute only that task:
+- "Do task FN-20260222-0001" → Execute only that numbered task
+- "Do the 1st todo task" → Execute the first `#` item in todo.md
+- No number specified → Execute from the **first item** in todo.md sequentially (one at a time; proceed to next after completion)
+
+### Review Cleanup and TODO Generation
+
+When the user says **"clean up reviews"**, **"generate TODO from reviews"**, **"리뷰 정리해줘"**, **"리뷰 정리해서 TODO 생성해줘"**, etc., follow the procedure below.
+
+#### Procedure
+
+1. **Scan worked folder**: Read all `.md` files in `.github/task/worked/`.
+2. **Check for `# Review` section**: Check each file for a `# Review` (or `## Review`) heading.
+   - Files **without** a `# Review` section are left untouched (no move, no modification).
+3. **Create TODO items**: Organize the `# Review` section content into new task items in `.github/task/todo.md`.
+   - Task numbers follow the existing todo addition rules (`FN-{YYYYMMDD}-{NNNN}`).
+   - If the review content contains multiple independent tasks, split each into a separate TODO item.
+   - If the review content is a single task, create one TODO item.
+4. **Move to reviewed folder**: Move the worked files that had a `# Review` section to `.github/task/reviewed/`.
+   - Create the `reviewed/` folder if it doesn't exist.
+   - Keep the filename unchanged (e.g., `worked/FN-20260222-0001.md` → `reviewed/FN-20260222-0001.md`).
+5. **Report results**: Inform the user of the number of files processed, TODO items created, and files skipped.
+
+#### Review Section Guide (in worked files)
+
+If additional improvements are needed after completing a task, add a `# Review` section to the worked archive file:
+
+```markdown
+# FN-20260222-0001: Task Title
+
+## Original Task Description
+...
+
+## Summary of Work Done
+...
+
+## Related Devlog
+...
+
+# Review
+- Search performance improvement needed: currently doing full scan with LIKE query, consider adding an index
+- Error message i18n not yet applied
+```
+
+When the user later runs "clean up reviews", the Review content above is automatically converted into TODO items.
+
 ### Notable files
 - `src/core/constants.js`: centralized icons, file types, and app definitions.
 - `src/editor/editors/editorBase.js`: Shared logic for Webview panel creation and lifecycle.
