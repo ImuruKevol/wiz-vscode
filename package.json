@@ -2,7 +2,7 @@
   "name": "wiz-vscode",
   "displayName": "Wiz VSCode Explorer",
   "description": "A comprehensive VS Code extension for managing Wiz Framework projects",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "publisher": "season-framework",
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   ],
   "activationEvents": [
     "onView:wizExplorer",
+    "onView:wizCopilot",
     "workspaceContains:**/project/*/src",
     "onCommand:wizExplorer.navigatePrevious",
     "onCommand:wizExplorer.navigateNext",
@@ -36,8 +37,12 @@
     "views": {
       "wiz-explorer": [
         {
+          "id": "wizCopilot",
+          "name": "Copilot"
+        },
+        {
           "id": "wizExplorer",
-          "name": "Files"
+          "name": "Source"
         }
       ]
     },
@@ -46,6 +51,31 @@
         "command": "wizExplorer.refresh",
         "title": "Wiz: Refresh Explorer",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "wizCopilot.refresh",
+        "title": "Wiz Copilot: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "wizCopilot.generateTaskInstruction",
+        "title": "Wiz Copilot: 인스트럭션 생성 마법사",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "wizCopilot.todoWizard",
+        "title": "Wiz Copilot: TODO 생성 마법사",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wizCopilot.reviewWizard",
+        "title": "Wiz Copilot: 리뷰 정리 마법사",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "wizCopilot.runTask",
+        "title": "Wiz Copilot: 작업 실행",
+        "icon": "$(play)"
       },
       {
         "command": "wizExplorer.startMcpServer",
@@ -404,6 +434,11 @@
           "command": "wizExplorer.switchProject",
           "when": "view == wizExplorer",
           "group": "navigation@3"
+        },
+        {
+          "command": "wizCopilot.refresh",
+          "when": "view == wizCopilot",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [
@@ -452,32 +487,32 @@
         },
         {
           "command": "wizExplorer.newFile",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder || viewItem == taskCategory)",
           "group": "1_modification"
         },
         {
           "command": "wizExplorer.newFolder",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder || viewItem == taskCategory)",
           "group": "1_modification"
         },
         {
           "command": "wizExplorer.copy",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
           "group": "2_clipboard"
         },
         {
           "command": "wizExplorer.paste",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder || viewItem == taskCategory)",
           "group": "2_clipboard"
         },
         {
           "command": "wizExplorer.rename",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == portalPackage)",
           "group": "3_modification"
         },
         {
           "command": "wizExplorer.delete",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
           "group": "3_delete"
         },
         {
@@ -487,18 +522,38 @@
         },
         {
           "command": "wizExplorer.downloadFile",
-          "when": "view == wizExplorer && (viewItem == file || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "z_reveal"
         },
         {
           "command": "wizExplorer.uploadFile",
-          "when": "view == wizExplorer && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder || viewItem == taskCategory)",
           "group": "z_reveal"
         },
         {
           "command": "wizExplorer.importGithubFromGit",
-          "when": "view == wizExplorer && viewItem == copilotCategory",
+          "when": "(view == wizExplorer || view == wizCopilot) && viewItem == copilotCategory",
           "group": "0_import"
+        },
+        {
+          "command": "wizCopilot.generateTaskInstruction",
+          "when": "view == wizCopilot && viewItem == copilotCategory",
+          "group": "inline"
+        },
+        {
+          "command": "wizCopilot.todoWizard",
+          "when": "view == wizCopilot && viewItem == taskCategory",
+          "group": "inline@1"
+        },
+        {
+          "command": "wizCopilot.reviewWizard",
+          "when": "view == wizCopilot && viewItem == taskCategory",
+          "group": "inline@2"
+        },
+        {
+          "command": "wizCopilot.runTask",
+          "when": "view == wizCopilot && viewItem == taskCategory",
+          "group": "inline@3"
         }
       ],
       "commandPalette": [
@@ -725,6 +780,26 @@
         },
         {
           "command": "wizExplorer.downloadFile",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.refresh",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.generateTaskInstruction",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.todoWizard",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.reviewWizard",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.runTask",
           "when": "false"
         }
       ]

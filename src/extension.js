@@ -5,8 +5,10 @@
 
 const vscode = require('vscode');
 const path = require('path');
+const fs = require('fs');
 
 const FileExplorerProvider = require('./explorer/fileExplorerProvider');
+const CopilotExplorerProvider = require('./explorer/copilotExplorerProvider');
 const AppEditorProvider = require('./editor/appEditorProvider');
 const AppContextListener = require('./editor/appContextListener');
 const WizFileSystemProvider = require('./editor/wizFileSystemProvider');
@@ -28,6 +30,9 @@ function activate(context) {
         undefined,
         context.extension.packageJSON?.version || 'unknown'
     );
+
+    // Copilot Explorer (메인 프로바이더의 상태를 공유)
+    const copilotExplorerProvider = new CopilotExplorerProvider(fileExplorerProvider);
 
     // Register Wiz File System
     context.subscriptions.push(
@@ -173,6 +178,20 @@ function activate(context) {
         dragAndDropController: dragAndDropController
     });
     context.subscriptions.push(treeView);
+
+    // Copilot Tree View
+    const copilotTreeView = vscode.window.createTreeView('wizCopilot', {
+        treeDataProvider: copilotExplorerProvider,
+        showCollapseAll: true,
+        canSelectMany: true
+    });
+    context.subscriptions.push(copilotTreeView);
+
+    // Main explorer 갱신 시 Copilot explorer도 동기화
+    fileExplorerProvider.onDidChangeTreeData(() => {
+        copilotExplorerProvider.refresh();
+    });
+
     updateProjectRoot();
 
     // 최신 버전 확인 (GitHub tags에서 조회)
@@ -243,6 +262,135 @@ function activate(context) {
     const commands = [
         // Core commands
         ['wizExplorer.refresh', () => fileExplorerProvider.refresh()],
+        ['wizCopilot.refresh', () => copilotExplorerProvider.refresh()],
+        ['wizCopilot.generateTaskInstruction', async () => {
+            if (!workspaceRoot) {
+                vscode.window.showErrorMessage('워크스페이스가 열려있지 않습니다.');
+                return;
+            }
+
+            const githubPath = path.join(workspaceRoot, '.github');
+            const instructionPath = path.join(githubPath, 'copilot-instructions.md');
+            const taskTodoPath = path.join(githubPath, 'task', 'todo.md');
+
+            // todo.md 존재 여부 확인
+            let todoContent = '';
+            if (fs.existsSync(taskTodoPath)) {
+                todoContent = fs.readFileSync(taskTodoPath, 'utf8').trim();
+            }
+
+            // 기존 인스트럭션 파일에 이미 반영되어 있는지 확인
+            if (fs.existsSync(instructionPath)) {
+                const existing = fs.readFileSync(instructionPath, 'utf8');
+                if (existing.includes('Task 기반 작업 관리')) {
+                    vscode.window.showInformationMessage('Task 기반 작업 관리 인스트럭션이 이미 반영되어 있습니다.');
+                    return;
+                }
+            }
+
+            // Copilot 채팅에 보낼 프롬프트 구성
+            const prompt = [
+                `아래 "Task 기반 작업 관리" 인스트럭션을 \`${path.relative(workspaceRoot, instructionPath)}\` 파일에 반영해줘.`,
+                '기존 파일이 있으면 내용을 유지하면서 인스트럭션을 추가/업데이트하고, 없으면 새로 생성해줘.',
+                '',
+                '## 반영할 인스트럭션',
+                '',
+                '### Forced Instruction (파일 상단, 우선순위 높은 위치에 배치)',
+                '',
+                '> **Task 기반 작업 관리**: 사용자가 별도 내용 없이 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 정의된 작업을 순서대로 수행한다. 작업은 `# FN-{YYYYMMDD}-{NNNN}: {제목}` 형식의 헤딩으로 구분되며, 작업 완료 후에는 Devlog를 남기고 `.github/task/worked/{작업번호}.md`에 아카이브한 뒤 `todo.md`에서 해당 항목을 삭제한다. 사용자가 **"todo에 추가해줘"**라고 하면 동일한 번호 규칙으로 항목을 추가한다. 상세 규칙은 하단 "Task 기반 작업 관리" 섹션을 참조한다.',
+                '',
+                '### Refer Instruction (파일 하단에 상세 규칙 섹션으로 배치)',
+                '',
+                '## Task 기반 작업 관리',
+                '',
+                '사용자가 별도 내용 없이 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 정의된 작업을 순서대로 수행한다.',
+                '',
+                '### 디렉토리 구조',
+                '```',
+                '.github/task/',
+                '├── todo.md              # 작업 목록',
+                '├── worked/              # 완료된 작업 아카이브',
+                '└── reviewed/            # 리뷰 완료 후 이동',
+                '```',
+                '',
+                '### todo.md 형식',
+                '작업은 `# FN-{YYYYMMDD}-{NNNN}: {제목}` 헤딩으로 구분.',
+                '',
+                '### 작업 수행 흐름',
+                '1. todo.md 읽기 → 2. 작업 수행 → 3. Devlog 작성 → 4. worked 아카이브 생성 → 5. todo.md 정리 → 6. 더미 템플릿 유지',
+                '',
+                '### worked 아카이브 파일 형식',
+                '`# {작업번호}: {제목}` > `## 작업 지시 원문` (원문 그대로) > `## 수행 내역 요약` > `## 관련 Devlog`',
+                '',
+                '### todo 항목 추가',
+                '`FN-{YYYYMMDD}-{NNNN}` 형식 번호 자동 생성, `todo.md`에 추가.',
+                '',
+                '### 리뷰 정리',
+                'worked 파일의 `# Review` 섹션 → TODO 변환, reviewed 폴더로 이동.',
+            ].join('\n');
+
+            try {
+                // VS Code Copilot Chat에 메시지 전송
+                await vscode.commands.executeCommand('workbench.action.chat.open', {
+                    query: prompt
+                });
+            } catch (e) {
+                // Copilot Chat이 설치되지 않은 경우 fallback
+                vscode.window.showWarningMessage(
+                    'Copilot Chat을 열 수 없습니다. GitHub Copilot Chat 확장이 설치되어 있는지 확인해주세요.',
+                    '확인'
+                );
+            }
+        }],
+        ['wizCopilot.todoWizard', async () => {
+            const input = await vscode.window.showInputBox({
+                title: 'TODO 생성 마법사',
+                prompt: '추가할 TODO 내용을 입력하세요',
+                placeHolder: '예: 검색 기능에 페이지네이션 추가',
+                ignoreFocusOut: true
+            });
+            if (!input) return;
+
+            const query = `TODO 작성해줘\n\n${input}`;
+            try {
+                await vscode.commands.executeCommand('workbench.action.chat.open', { query });
+            } catch (e) {
+                vscode.window.showWarningMessage(
+                    'Copilot Chat을 열 수 없습니다. GitHub Copilot Chat 확장이 설치되어 있는지 확인해주세요.',
+                    '확인'
+                );
+            }
+        }],
+        ['wizCopilot.reviewWizard', async () => {
+            try {
+                await vscode.commands.executeCommand('workbench.action.chat.open', {
+                    query: '리뷰 정리해줘'
+                });
+            } catch (e) {
+                vscode.window.showWarningMessage(
+                    'Copilot Chat을 열 수 없습니다. GitHub Copilot Chat 확장이 설치되어 있는지 확인해주세요.',
+                    '확인'
+                );
+            }
+        }],
+        ['wizCopilot.runTask', async () => {
+            if (!workspaceRoot) {
+                vscode.window.showErrorMessage('워크스페이스가 열려있지 않습니다.');
+                return;
+            }
+            const todoPath = path.join(workspaceRoot, '.github', 'task', 'todo.md');
+            try {
+                const todoUri = vscode.Uri.file(todoPath);
+                await vscode.commands.executeCommand('workbench.action.chat.open', {
+                    query: `#file:${todoPath} 작업 수행해줘`
+                });
+            } catch (e) {
+                vscode.window.showWarningMessage(
+                    'Copilot Chat을 열 수 없습니다. GitHub Copilot Chat 확장이 설치되어 있는지 확인해주세요.',
+                    '확인'
+                );
+            }
+        }],
         ['wizExplorer.openAppEditor', (appPath, groupType) => appEditorProvider.openEditor(appPath, groupType)],
         ['wizExplorer.openPortalInfo', (portalJsonPath) => appEditorProvider.openPortalInfoEditor(portalJsonPath)],
         ['wizExplorer.updateExtension', async () => {

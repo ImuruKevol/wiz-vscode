@@ -9,6 +9,16 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
+### v1.3.1 (Copilot Explorer & Task Management)
+
+- [083](./devlog/v1.3.1/083-todo-wizard.md) - TODO 생성 마법사 추가 및 작업 관리 버튼 순서 정렬
+- [082](./devlog/v1.3.1/082-task-category-wizard-buttons.md) - 작업 관리 카테고리에 리뷰 정리 마법사/작업 실행 버튼 추가
+- [081](./devlog/v1.3.1/081-instruction-wizard-improvements.md) - 인스트럭션 마법사 이름 변경, 중복 방지, 버튼 위치 이동
+- [080](./devlog/v1.3.1/080-instruction-copilot-chat-integration.md) - 인스트럭션 생성 방식을 Copilot 채팅 연동으로 변경
+- [079](./devlog/v1.3.1/079-copilot-source-menu-restructure.md) - Copilot/Source 메뉴 구성 변경 (뷰 순서, 카테고리 정리)
+- [078](./devlog/v1.3.1/078-task-management-instruction.md) - 작업 관리 카테고리 및 인스트럭션 자동 생성 기능
+- [077](./devlog/v1.3.1/077-copilot-explorer-menu.md) - WIZ Copilot 탐색기 메뉴 구현 (Instruction, 작업 관리 카테고리)
+
 ### v1.3.0 (MCP Native Delegation & Auto Update)
 
 - [076](./devlog/v1.3.0/076-mcp-native-delegation-and-version-update.md) - MCP 네이티브 위임 (cp.spawn 제거), GitHub vsix 자동 업데이트, 버전 상태 표시

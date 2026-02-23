@@ -244,3 +244,36 @@ When the user later runs "clean up reviews", the Review content above is automat
 ### Notable files
 - `src/core/constants.js`: centralized icons, file types, and app definitions.
 - `src/editor/editors/editorBase.js`: Shared logic for Webview panel creation and lifecycle.
+
+### Version Release Workflow
+
+When the user says **"x.x.x 버전 릴리즈 해줘"**, **"release version x.x.x"**, or similar, perform the full release pipeline:
+
+#### Procedure
+
+1. **Identify changes**: Use `git diff` and `git log` to find all changes since the last tagged version. Check uncommitted changes, untracked devlog files, and worked task archives.
+
+2. **Update version**: Change `version` field in `package.json` to the specified version.
+
+3. **Organize devlogs**: If any devlog files in a previous version directory actually belong to the new version (created after the previous tag), move them to `devlog/v{new-version}/` and update the version references inside each file.
+
+4. **Update DEVLOG.md**: Add a new version section at the top of the version list and move any entries that belong to the new version from the previous section.
+
+5. **Update README.md**: Update all version references:
+   - Version badge URL and display text
+   - VSIX install command example
+   - "Latest Version" section heading and release notes link
+
+6. **Create release file**: Create `release/v{new-version}.md` following the existing release note format (see `release/` directory for examples). Include:
+   - Release date
+   - Highlights summary
+   - New Features / Improvements / Bug Fixes / Internal sections as appropriate
+
+7. **Build VSIX**: Run `vsce package` to generate `wiz-vscode-{version}.vsix` (includes `node_modules` dependencies). Install `@vscode/vsce` globally if not available.
+
+8. **Summarize changes**: Provide a brief summary of the version changes to the user.
+
+#### Example Trigger
+- "1.3.1 버전 릴리즈 해줘"
+- "release v2.0.0"
+- "버전 1.4.0으로 릴리즈"

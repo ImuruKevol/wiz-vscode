@@ -195,7 +195,7 @@ class ConfigCategory extends CategoryItem {
  */
 class SettingsCategory extends CategoryItem {
     constructor(provider) {
-        super('wiz settings', 'wizSettings', new vscode.ThemeIcon('gear'));
+        super('wiz info', 'wizSettings', new vscode.ThemeIcon('info'));
         this.provider = provider;
         this.contextValue = 'settingsCategory';
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
