@@ -100,7 +100,10 @@ function activate(context) {
     });
 
     const fileManager = new FileManager({
-        onRefresh: () => fileExplorerProvider.refresh(),
+        onRefresh: () => {
+            fileExplorerProvider.refresh();
+            copilotExplorerProvider.refresh();
+        },
         getWorkspaceRoot: () => fileExplorerProvider.workspaceRoot
     });
 
@@ -139,6 +142,7 @@ function activate(context) {
             fileExplorerProvider.wizRoot = undefined;
             fileExplorerProvider.currentProjectName = currentProject;
             fileExplorerProvider.refresh();
+            copilotExplorerProvider.refresh();
             return;
         }
 
@@ -148,6 +152,7 @@ function activate(context) {
         fileExplorerProvider.wizRoot = workspaceRoot;
         fileExplorerProvider.currentProjectName = displayProjectName;
         fileExplorerProvider.refresh();
+        copilotExplorerProvider.refresh();
         
         if (treeView) {
             treeView.title = displayProjectName;
@@ -186,11 +191,6 @@ function activate(context) {
         canSelectMany: true
     });
     context.subscriptions.push(copilotTreeView);
-
-    // Main explorer 갱신 시 Copilot explorer도 동기화
-    fileExplorerProvider.onDidChangeTreeData(() => {
-        copilotExplorerProvider.refresh();
-    });
 
     updateProjectRoot();
 

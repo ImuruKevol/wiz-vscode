@@ -11,6 +11,7 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.1 (Copilot Explorer & Task Management)
 
+- [084](./devlog/v1.3.1/084-copilot-explorer-refresh-fix.md) - Copilot Explorer 메모리 누수 수정 (블랭킷 리스너 제거, 타겟팅 refresh)
 - [083](./devlog/v1.3.1/083-todo-wizard.md) - TODO 생성 마법사 추가 및 작업 관리 버튼 순서 정렬
 - [082](./devlog/v1.3.1/082-task-category-wizard-buttons.md) - 작업 관리 카테고리에 리뷰 정리 마법사/작업 실행 버튼 추가
 - [081](./devlog/v1.3.1/081-instruction-wizard-improvements.md) - 인스트럭션 마법사 이름 변경, 중복 방지, 버튼 위치 이동
