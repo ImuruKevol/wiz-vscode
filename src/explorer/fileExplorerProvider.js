@@ -102,6 +102,12 @@ class FileExplorerProvider {
         const fsPath = element.resourceUri ? element.resourceUri.fsPath : null;
         if (!fsPath) return null;
 
+        // Boundary guard: paths outside workspaceRoot don't belong to this tree
+        // Prevents infinite getParent() chain climbing to filesystem root
+        if (this.workspaceRoot && !fsPath.startsWith(this.workspaceRoot + path.sep) && fsPath !== this.workspaceRoot) {
+            return null;
+        }
+
         const parentPath = path.dirname(fsPath);
         const name = path.basename(parentPath);
         const grandPath = path.dirname(parentPath);

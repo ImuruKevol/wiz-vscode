@@ -34,15 +34,21 @@ class McpManager {
 
     /**
      * 상태 알림 (트리뷰 갱신 + context key 업데이트)
+     * 디바운스 적용: FileSystemWatcher가 create/change/delete를 연속 발생시켜도
+     * 마지막 호출만 실행하여 refresh 캐스케이드 방지
      * @private
      */
     _notifyState() {
-        const wizServerExists = this._hasWizServer();
-        vscode.commands.executeCommand('setContext', 'wizExplorer:mcpConfigExists', wizServerExists);
-        this.onStateChange({
-            mcpServerRunning: wizServerExists,
-            mcpConfigExists: wizServerExists
-        });
+        if (this._notifyTimer) clearTimeout(this._notifyTimer);
+        this._notifyTimer = setTimeout(() => {
+            this._notifyTimer = null;
+            const wizServerExists = this._hasWizServer();
+            vscode.commands.executeCommand('setContext', 'wizExplorer:mcpConfigExists', wizServerExists);
+            this.onStateChange({
+                mcpServerRunning: wizServerExists,
+                mcpConfigExists: wizServerExists
+            });
+        }, 200);
     }
 
     /**

@@ -236,6 +236,11 @@ function activate(context) {
                 }
 
                 if (filePath) {
+                    // Skip auto-reveal for files outside the current project tree
+                    // (.github, .vscode, etc. are under wizRoot, not workspaceRoot)
+                    const projectRoot = fileExplorerProvider.workspaceRoot;
+                    if (!projectRoot || !filePath.startsWith(projectRoot + path.sep)) return;
+
                     try {
                         // Prevent infinite loop if update takes too long
                         const item = await Promise.race([

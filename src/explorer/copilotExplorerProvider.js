@@ -133,6 +133,14 @@ class CopilotExplorerProvider {
         const fsPath = element.resourceUri ? element.resourceUri.fsPath : null;
         if (!fsPath) return null;
 
+        // Boundary guard: paths outside .github don't belong to this tree
+        if (this.wizRoot) {
+            const githubBase = path.join(this.wizRoot, '.github');
+            if (!fsPath.startsWith(githubBase + path.sep) && fsPath !== githubBase) {
+                return null;
+            }
+        }
+
         const parentPath = path.dirname(fsPath);
 
         // .github 직계 자식 → copilotInstruction 카테고리
