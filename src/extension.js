@@ -14,6 +14,7 @@ const AppContextListener = require('./editor/appContextListener');
 const WizFileSystemProvider = require('./editor/wizFileSystemProvider');
 const NpmEditor = require('./editor/editors/npmEditor');
 const PipEditor = require('./editor/editors/pipEditor');
+const TodoEditor = require('./editor/editors/todoEditor');
 const { WizPathUtils } = require('./core');
 const { SourceManager, PackageManager, ProjectManager, FileManager, BuildManager, McpManager, NavigationManager } = require('./services');
 
@@ -348,23 +349,16 @@ function activate(context) {
             }
         }],
         ['wizCopilot.todoWizard', async () => {
-            const input = await vscode.window.showInputBox({
-                title: 'TODO 생성 마법사',
-                prompt: '추가할 TODO 내용을 입력하세요',
-                placeHolder: '예: 검색 기능에 페이지네이션 추가',
-                ignoreFocusOut: true
-            });
-            if (!input) return;
-
-            const query = `TODO 작성해줘\n\n${input}`;
-            try {
-                await vscode.commands.executeCommand('workbench.action.chat.open', { query });
-            } catch (e) {
-                vscode.window.showWarningMessage(
-                    'Copilot Chat을 열 수 없습니다. GitHub Copilot Chat 확장이 설치되어 있는지 확인해주세요.',
-                    '확인'
-                );
+            if (!workspaceRoot) {
+                vscode.window.showErrorMessage('워크스페이스가 열려있지 않습니다.');
+                return;
             }
+            const taskPath = path.join(workspaceRoot, '.github', 'task');
+            if (!fs.existsSync(taskPath)) {
+                fs.mkdirSync(taskPath, { recursive: true });
+            }
+            const todoEditor = new TodoEditor(context, taskPath);
+            await todoEditor.open();
         }],
         ['wizCopilot.reviewWizard', async () => {
             try {
