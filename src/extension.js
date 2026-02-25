@@ -17,6 +17,7 @@ const PipEditor = require('./editor/editors/pipEditor');
 const TodoEditor = require('./editor/editors/todoEditor');
 const TodoViewerEditor = require('./editor/editors/todoViewerEditor');
 const WorkedReviewEditor = require('./editor/editors/workedReviewEditor');
+const MarkdownViewerEditor = require('./editor/editors/markdownViewerEditor');
 const { WizPathUtils } = require('./core');
 const { SourceManager, PackageManager, ProjectManager, FileManager, BuildManager, McpManager, NavigationManager } = require('./services');
 
@@ -296,8 +297,12 @@ function activate(context) {
                 if (fs.existsSync(instructionPath)) {
                     const existing = fs.readFileSync(instructionPath, 'utf8');
                     if (existing.includes('Task 기반 작업 관리')) {
-                        vscode.window.showInformationMessage('Task 기반 작업 관리 인스트럭션이 이미 반영되어 있습니다.');
-                        return;
+                        const answer = await vscode.window.showWarningMessage(
+                            'Task 기반 작업 관리 인스트럭션이 이미 반영되어 있습니다.\n다시 적용하시겠습니까?',
+                            { modal: true },
+                            '다시 적용'
+                        );
+                        if (answer !== '다시 적용') return;
                     }
                 }
 
@@ -844,10 +849,15 @@ function activate(context) {
 
         ['wizExplorer.openFile', async (resource) => {
             if (resource && !resource.isDirectory) {
-                // todo.md → 커스텀 뷰어로 열기
                 const fsPath = resource.resourceUri.fsPath;
+                // todo.md → 커스텀 뷰어로 열기
                 if (path.basename(fsPath) === 'todo.md' && fsPath.includes(path.join('.github', 'task'))) {
                     await TodoViewerEditor.openOrCreate(context, fsPath);
+                    return;
+                }
+                // .md 파일 → 마크다운 뷰어로 열기
+                if (fsPath.endsWith('.md')) {
+                    await MarkdownViewerEditor.openOrCreate(context, fsPath);
                     return;
                 }
                 vscode.commands.executeCommand('vscode.open', resource.resourceUri);

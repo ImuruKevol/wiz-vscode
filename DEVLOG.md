@@ -11,6 +11,7 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.1 (Copilot Explorer & Task Management)
 
+- [096](./devlog/v1.3.1/096-instruction-confirm-and-markdown-viewer.md) - 인스트럭션 확인창 변경 및 GitHub 스타일 마크다운 뷰어 구현
 - [095](./devlog/v1.3.1/095-action-button-and-editor-ui-improvements.md) - 액션버튼 QuickPick 통합, 리뷰 에디터 UX 개선, 인스트럭션 마법사 아키텍처 분석 추가
 - [094](./devlog/v1.3.1/094-autoformat-fix-and-review-editor.md) - RichEditor 자동변환 keydown 전환 및 worked 리뷰 에디터 구현
 - [093](./devlog/v1.3.1/093-richeditor-autoformat-fix-and-image-blob.md) - RichEditor 자동변환 수정 및 이미지 blob 삽입 방식 전환
