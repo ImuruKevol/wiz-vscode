@@ -17,6 +17,9 @@
   ],
   "activationEvents": [
     "onView:wizExplorer",
+    "onView:wizInfo",
+    "onView:wizTask",
+    "onView:wizInstruction",
     "workspaceContains:**/project/*/src",
     "onCommand:wizExplorer.navigatePrevious",
     "onCommand:wizExplorer.navigateNext",
