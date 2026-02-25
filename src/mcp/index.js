@@ -1462,11 +1462,64 @@ class WizMcpServer {
 
     // ==================== Build ====================
 
+    /**
+     * 워크스페이스 설정에서 Python 인터프리터 경로를 읽어 wiz 실행 파일을 찾는다.
+     * BuildManager와 동일한 로직: 인터프리터 bin 디렉토리에서 wiz 실행 파일 탐색
+     * @private
+     */
+    _resolveWizExecutable(workspacePath) {
+        // 1. .vscode/settings.json 에서 wizExplorer.build.pythonInterpreterPath 읽기
+        let interpreterPath = '';
+        try {
+            const settingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+            if (fs.existsSync(settingsPath)) {
+                const raw = fs.readFileSync(settingsPath, 'utf8');
+                const settings = JSON.parse(raw);
+                interpreterPath = (settings['wizExplorer.build.pythonInterpreterPath'] || '').trim();
+            }
+        } catch (e) { /* skip */ }
+
+        // ${workspaceFolder} 변수 치환
+        if (interpreterPath) {
+            interpreterPath = interpreterPath.replace(/\$\{workspaceFolder\}/g, workspacePath);
+        }
+
+        // 2. 인터프리터 경로의 bin 디렉토리에서 wiz 실행 파일 찾기
+        if (interpreterPath && fs.existsSync(interpreterPath)) {
+            const binDir = path.dirname(interpreterPath);
+            const isWin = process.platform === 'win32';
+            const candidates = isWin ? ['wiz.exe', 'wiz.cmd', 'wiz.bat'] : ['wiz'];
+            for (const candidate of candidates) {
+                const wizPath = path.join(binDir, candidate);
+                if (fs.existsSync(wizPath)) {
+                    return wizPath;
+                }
+            }
+        }
+
+        // 3. 워크스페이스 venv에서 wiz 찾기
+        const isWin = process.platform === 'win32';
+        const venvDirs = ['venv', '.venv', 'env', '.env'];
+        for (const venv of venvDirs) {
+            const binDir = isWin
+                ? path.join(workspacePath, venv, 'Scripts')
+                : path.join(workspacePath, venv, 'bin');
+            const wizPath = path.join(binDir, isWin ? 'wiz.exe' : 'wiz');
+            if (fs.existsSync(wizPath)) {
+                return wizPath;
+            }
+        }
+
+        // 4. 폴백: 시스템 PATH의 wiz
+        return 'wiz';
+    }
+
     async build({ workspacePath, projectName, clean = false }) {
         const args = ['project', 'build', '--project', projectName];
         if (clean) args.push('--clean');
 
-        const { stdout, stderr } = await exec(`wiz ${args.join(' ')}`, { cwd: workspacePath });
+        const wizExecutable = this._resolveWizExecutable(workspacePath);
+        const { stdout, stderr } = await exec(`"${wizExecutable}" ${args.join(' ')}`, { cwd: workspacePath });
 
         return this._jsonResult({ success: true, output: stdout, errors: stderr || null });
     }
@@ -1813,9 +1866,28 @@ class WizMcpServer {
     // ==================== Dependency Management (pip / npm) ====================
 
     /**
-     * pip 실행 경로 결정 (venv 우선, 폴백으로 시스템 pip)
+     * pip 실행 경로 결정 (설정된 Python 인터프리터 > venv > 시스템 pip)
      */
     _getPipPath(workspacePath) {
+        // 1. 설정된 Python 인터프리터의 pip 사용
+        try {
+            const settingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+            if (fs.existsSync(settingsPath)) {
+                const raw = fs.readFileSync(settingsPath, 'utf8');
+                const settings = JSON.parse(raw);
+                let interpreterPath = (settings['wizExplorer.build.pythonInterpreterPath'] || '').trim();
+                if (interpreterPath) {
+                    interpreterPath = interpreterPath.replace(/\$\{workspaceFolder\}/g, workspacePath);
+                    if (fs.existsSync(interpreterPath)) {
+                        const binDir = path.dirname(interpreterPath);
+                        const pipPath = path.join(binDir, 'pip');
+                        const pip3Path = path.join(binDir, 'pip3');
+                        if (fs.existsSync(pip3Path)) return pip3Path;
+                        if (fs.existsSync(pipPath)) return pipPath;
+                    }
+                }
+            }
+        } catch (e) { /* skip */ }
         const venvPaths = [
             path.join(workspacePath, 'venv', 'bin', 'pip'),
             path.join(workspacePath, '.venv', 'bin', 'pip'),

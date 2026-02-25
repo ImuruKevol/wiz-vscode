@@ -78,6 +78,16 @@
         "icon": "$(play)"
       },
       {
+        "command": "wizCopilot.taskAction",
+        "title": "Wiz Copilot: 작업 관리 메뉴",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wizCopilot.openTodoInDefaultEditor",
+        "title": "Wiz Copilot: 기본 에디터로 열기",
+        "icon": "$(edit)"
+      },
+      {
         "command": "wizExplorer.startMcpServer",
         "title": "Wiz: Start MCP Server",
         "icon": "$(debug-start)"
@@ -497,7 +507,7 @@
         },
         {
           "command": "wizExplorer.copy",
-          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
           "group": "2_clipboard"
         },
         {
@@ -507,12 +517,12 @@
         },
         {
           "command": "wizExplorer.rename",
-          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == portalPackage)",
           "group": "3_modification"
         },
         {
           "command": "wizExplorer.delete",
-          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
           "group": "3_delete"
         },
         {
@@ -522,7 +532,7 @@
         },
         {
           "command": "wizExplorer.downloadFile",
-          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizCopilot) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "z_reveal"
         },
         {
@@ -541,19 +551,19 @@
           "group": "inline"
         },
         {
-          "command": "wizCopilot.todoWizard",
+          "command": "wizCopilot.taskAction",
           "when": "view == wizCopilot && viewItem == taskCategory",
-          "group": "inline@1"
+          "group": "inline"
         },
         {
           "command": "wizCopilot.reviewWizard",
-          "when": "view == wizCopilot && viewItem == taskCategory",
-          "group": "inline@2"
+          "when": "view == wizCopilot && viewItem == workedFolder",
+          "group": "inline"
         },
         {
-          "command": "wizCopilot.runTask",
-          "when": "view == wizCopilot && viewItem == taskCategory",
-          "group": "inline@3"
+          "command": "wizCopilot.openTodoInDefaultEditor",
+          "when": "view == wizCopilot && viewItem == todoFile",
+          "group": "inline"
         }
       ],
       "commandPalette": [
@@ -800,6 +810,14 @@
         },
         {
           "command": "wizCopilot.runTask",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.openTodoInDefaultEditor",
+          "when": "false"
+        },
+        {
+          "command": "wizCopilot.taskAction",
           "when": "false"
         }
       ]

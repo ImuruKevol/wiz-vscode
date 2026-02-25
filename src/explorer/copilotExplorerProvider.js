@@ -18,7 +18,7 @@ const EmptyItem = require('./treeItems/emptyItem');
  */
 class CopilotInstructionCategory extends CategoryItem {
     constructor(provider) {
-        super('instruction', 'copilotInstruction', new vscode.ThemeIcon('book'));
+        super('인스트럭션', 'copilotInstruction', new vscode.ThemeIcon('book'));
         this.provider = provider;
         this.contextValue = 'copilotCategory';
     }
@@ -64,7 +64,18 @@ class TaskCategory extends CategoryItem {
         if (!this.provider.wizRoot) return [];
         const taskPath = path.join(this.provider.wizRoot, '.github', 'task');
         if (!fs.existsSync(taskPath)) return [];
-        return this.provider.getFilesAndFolders(taskPath);
+        const items = this.provider.getFilesAndFolders(taskPath);
+        // todo.md에 특별한 contextValue 부여 (인라인 편집 버튼용)
+        // worked 폴더에 특별한 contextValue 부여 (리뷰 에디터 버튼용)
+        for (const item of items) {
+            if (!item.isDirectory && item.label === 'todo.md') {
+                item.contextValue = 'todoFile';
+            }
+            if (item.isDirectory && item.label === 'worked') {
+                item.contextValue = 'workedFolder';
+            }
+        }
+        return items;
     }
 }
 
