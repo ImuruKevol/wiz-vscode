@@ -312,4 +312,72 @@ class SettingsCategory extends CategoryItem {
     }
 }
 
-module.exports = { SourceCategory, PortalCategory, ProjectCategory, CopilotCategory, ConfigCategory, SettingsCategory };
+/**
+ * 인스트럭션 카테고리 — .github 경로의 폴더/파일을 표시 (task 제외)
+ */
+class InstructionCategory extends CategoryItem {
+    constructor(provider) {
+        super('인스트럭션', 'copilotInstruction', new vscode.ThemeIcon('book'));
+        this.provider = provider;
+        this.contextValue = 'copilotCategory';
+    }
+
+    get resourceUri() {
+        if (!this.provider.wizRoot) return undefined;
+        return vscode.Uri.file(path.join(this.provider.wizRoot, '.github'));
+    }
+
+    set resourceUri(_) {
+        // TreeItem 내부 할당 무시 — getter로 동적 반환
+    }
+
+    async getChildren() {
+        if (!this.provider.wizRoot) return [];
+        const githubPath = path.join(this.provider.wizRoot, '.github');
+        if (!fs.existsSync(githubPath)) return [];
+        return this.provider.getFilesAndFolders(githubPath, (item) => item !== 'task');
+    }
+}
+
+/**
+ * 작업 관리 카테고리 — .github/task 폴더를 표시
+ */
+class TaskCategory extends CategoryItem {
+    constructor(provider) {
+        super('작업 관리', 'copilotTask', new vscode.ThemeIcon('tasklist'));
+        this.provider = provider;
+        this.contextValue = 'taskCategory';
+    }
+
+    get resourceUri() {
+        if (!this.provider.wizRoot) return undefined;
+        return vscode.Uri.file(path.join(this.provider.wizRoot, '.github', 'task'));
+    }
+
+    set resourceUri(_) {
+        // TreeItem 내부 할당 무시 — getter로 동적 반환
+    }
+
+    async getChildren() {
+        if (!this.provider.wizRoot) return [];
+        const taskPath = path.join(this.provider.wizRoot, '.github', 'task');
+        if (!fs.existsSync(taskPath)) return [];
+        const items = this.provider.getFilesAndFolders(taskPath);
+        for (const item of items) {
+            if (!item.isDirectory && item.label === 'todo.md') {
+                item.contextValue = 'todoFile';
+            }
+            if (item.isDirectory && item.label === 'worked') {
+                item.contextValue = 'workedFolder';
+                // 클릭 시 리뷰 에디터 열기 (화살표로만 폴더 확장)
+                item.command = {
+                    command: 'wizCopilot.reviewWizard',
+                    title: 'Open Review Editor'
+                };
+            }
+        }
+        return items;
+    }
+}
+
+module.exports = { SourceCategory, PortalCategory, ProjectCategory, CopilotCategory, ConfigCategory, SettingsCategory, InstructionCategory, TaskCategory };

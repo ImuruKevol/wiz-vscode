@@ -1,4 +1,4 @@
-# 093. RichEditor 자동변환 수정 및 이미지 blob 삽입 (v1.3.1)
+# 093. RichEditor 자동변환 수정 및 이미지 blob 삽입 (v1.3.2)
 
 ## 개요
 RichEditor 자동변환 기능의 미동작 버그를 수정하고 Heading 관련 코드를 제거했으며, 이미지 업로드를 파일 저장 방식에서 base64 data URI 인라인 삽입 방식으로 전환했다.

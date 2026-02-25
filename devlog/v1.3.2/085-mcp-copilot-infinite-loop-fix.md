@@ -1,4 +1,4 @@
-# 085. MCP Configuration / Copilot 탐색기 무한루프 수정 (v1.3.1)
+# 085. MCP Configuration / Copilot 탐색기 무한루프 수정 (v1.3.2)
 
 ## 개요
 MCP configuration에서 mcp.json을 열었다가 닫거나, Copilot 파일트리를 반복 탐색하면 메모리 부족으로 VS Code가 멈추는 문제를 수정하였다.

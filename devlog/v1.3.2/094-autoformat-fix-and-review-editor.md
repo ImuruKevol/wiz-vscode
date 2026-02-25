@@ -1,4 +1,4 @@
-# 094. RichEditor 자동변환 수정 및 worked 리뷰 에디터 (v1.3.1)
+# 094. RichEditor 자동변환 수정 및 worked 리뷰 에디터 (v1.3.2)
 
 ## 개요
 RichEditor의 자동변환 기능을 `keydown` 이벤트 기반으로 전면 재작성하여 VS Code Webview에서의 안정적 동작을 보장하고, worked 파일을 리뷰할 수 있는 전용 에디터를 구현했다.

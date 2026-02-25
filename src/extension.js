@@ -8,7 +8,8 @@ const path = require('path');
 const fs = require('fs');
 
 const FileExplorerProvider = require('./explorer/fileExplorerProvider');
-const CopilotExplorerProvider = require('./explorer/copilotExplorerProvider');
+const CategoryViewProvider = require('./explorer/categoryViewProvider');
+const { SettingsCategory, TaskCategory, InstructionCategory } = require('./explorer/models/categoryHandlers');
 const AppEditorProvider = require('./editor/appEditorProvider');
 const AppContextListener = require('./editor/appContextListener');
 const WizFileSystemProvider = require('./editor/wizFileSystemProvider');
@@ -35,15 +36,21 @@ function activate(context) {
         context.extension.packageJSON?.version || 'unknown'
     );
 
-    // Copilot Explorer (메인 프로바이더의 상태를 공유)
-    const copilotExplorerProvider = new CopilotExplorerProvider(fileExplorerProvider);
-
     // Register Wiz File System
     context.subscriptions.push(
         vscode.workspace.registerFileSystemProvider('wiz', new WizFileSystemProvider(), { 
             isCaseSensitive: true 
         })
     );
+
+    // ==================== Category View Providers ====================
+    const infoCategory = new SettingsCategory(fileExplorerProvider);
+    const taskCategory = new TaskCategory(fileExplorerProvider);
+    const instructionCategory = new InstructionCategory(fileExplorerProvider);
+
+    const infoProvider = new CategoryViewProvider(infoCategory, fileExplorerProvider);
+    const taskProvider = new CategoryViewProvider(taskCategory, fileExplorerProvider);
+    const instructionProvider = new CategoryViewProvider(instructionCategory, fileExplorerProvider);
 
     // Register Webview Serializer for Info Tab Split/Restore
     context.subscriptions.push(
@@ -106,7 +113,6 @@ function activate(context) {
     const fileManager = new FileManager({
         onRefresh: () => {
             fileExplorerProvider.refresh();
-            copilotExplorerProvider.refresh();
         },
         getWorkspaceRoot: () => fileExplorerProvider.workspaceRoot
     });
@@ -146,7 +152,6 @@ function activate(context) {
             fileExplorerProvider.wizRoot = undefined;
             fileExplorerProvider.currentProjectName = currentProject;
             fileExplorerProvider.refresh();
-            copilotExplorerProvider.refresh();
             return;
         }
 
@@ -156,7 +161,6 @@ function activate(context) {
         fileExplorerProvider.wizRoot = workspaceRoot;
         fileExplorerProvider.currentProjectName = displayProjectName;
         fileExplorerProvider.refresh();
-        copilotExplorerProvider.refresh();
         
         if (treeView) {
             treeView.title = displayProjectName;
@@ -188,13 +192,21 @@ function activate(context) {
     });
     context.subscriptions.push(treeView);
 
-    // Copilot Tree View
-    const copilotTreeView = vscode.window.createTreeView('wizCopilot', {
-        treeDataProvider: copilotExplorerProvider,
+    // Sub-views: Info, Task, Instruction
+    const infoView = vscode.window.createTreeView('wizInfo', {
+        treeDataProvider: infoProvider
+    });
+    const taskView = vscode.window.createTreeView('wizTask', {
+        treeDataProvider: taskProvider,
         showCollapseAll: true,
         canSelectMany: true
     });
-    context.subscriptions.push(copilotTreeView);
+    const instructionView = vscode.window.createTreeView('wizInstruction', {
+        treeDataProvider: instructionProvider,
+        showCollapseAll: true,
+        canSelectMany: true
+    });
+    context.subscriptions.push(infoView, taskView, instructionView);
 
     updateProjectRoot();
 
@@ -271,7 +283,7 @@ function activate(context) {
     const commands = [
         // Core commands
         ['wizExplorer.refresh', () => fileExplorerProvider.refresh()],
-        ['wizCopilot.refresh', () => copilotExplorerProvider.refresh()],
+        ['wizCopilot.refresh', () => fileExplorerProvider.refresh()],
         ['wizCopilot.generateTaskInstruction', async () => {
             if (!workspaceRoot) {
                 vscode.window.showErrorMessage('워크스페이스가 열려있지 않습니다.');
@@ -595,13 +607,10 @@ function activate(context) {
             });
             if (!gitUrl) return;
 
-            const githubPath = require('path').join(workspaceRoot, '.github');
-            const githubExists = require('fs').existsSync(githubPath);
+            const githubPath = path.join(workspaceRoot, '.github');
 
             const confirm = await vscode.window.showWarningMessage(
-                githubExists
-                    ? `기존 .github 디렉토리가 삭제되고 "${gitUrl}" 레포로 교체됩니다. 계속하시겠습니까?`
-                    : `"${gitUrl}" 레포를 .github 디렉토리로 클론합니다. 계속하시겠습니까?`,
+                `"${gitUrl}" 레포의 내용을 .github 디렉토리에 병합합니다. 동일 이름의 파일은 덮어씁니다. 계속하시겠습니까?`,
                 { modal: true },
                 '확인'
             );
@@ -613,23 +622,75 @@ function activate(context) {
                     const cp = require('child_process');
                     const util = require('util');
                     const exec = util.promisify(cp.exec);
+                    const os = require('os');
+                    const tmpDir = path.join(os.tmpdir(), `wiz_git_import_${Date.now()}`);
                     try {
-                        if (githubExists) {
-                            await exec(`rm -rf "${githubPath}"`);
+                        // 1. tmp 폴더에 clone
+                        await exec(`git clone "${gitUrl}" "${tmpDir}"`);
+                        // 2. .github 폴더 생성
+                        if (!fs.existsSync(githubPath)) {
+                            fs.mkdirSync(githubPath, { recursive: true });
                         }
-                        await exec(`git clone "${gitUrl}" "${githubPath}"`);
-                        // .git 디렉토리 제거 (독립 레포 히스토리 불필요)
-                        const dotGitPath = require('path').join(githubPath, '.git');
-                        if (require('fs').existsSync(dotGitPath)) {
+                        // 3. clone된 레포 내용을 .github에 복사 (기존 파일 유지, 동일 파일만 덮어쓰기)
+                        await exec(`cp -R "${tmpDir}/"* "${githubPath}/"`);
+                        // 4. 복사된 .git 디렉토리 제거
+                        const dotGitPath = path.join(githubPath, '.git');
+                        if (fs.existsSync(dotGitPath)) {
                             await exec(`rm -rf "${dotGitPath}"`);
                         }
+                        // 5. tmp 폴더 정리
+                        await exec(`rm -rf "${tmpDir}"`);
                         vscode.window.showInformationMessage('.github 디렉토리를 성공적으로 불러왔습니다.');
                         fileExplorerProvider.refresh();
                     } catch (err) {
+                        // tmp 폴더 정리 시도
+                        try { await exec(`rm -rf "${tmpDir}"`); } catch (_) {}
                         vscode.window.showErrorMessage(`Git 클론 실패: ${err.message}`);
                     }
                 }
             );
+        }],
+
+        // 작업관리 다운로드 (zip)
+        ['wizTask.download', async () => {
+            if (!workspaceRoot) return;
+            const taskPath = path.join(workspaceRoot, '.github', 'task');
+            if (!fs.existsSync(taskPath)) {
+                vscode.window.showWarningMessage('.github/task 폴더가 없습니다.');
+                return;
+            }
+            await fileManager.download(taskPath, {});
+        }],
+
+        // 작업관리 업로드
+        ['wizTask.upload', async () => {
+            if (!workspaceRoot) return;
+            const taskPath = path.join(workspaceRoot, '.github', 'task');
+            if (!fs.existsSync(taskPath)) {
+                fs.mkdirSync(taskPath, { recursive: true });
+            }
+            await fileManager.upload(taskPath, context);
+        }],
+
+        // 인스트럭션 다운로드 (zip)
+        ['wizInstruction.download', async () => {
+            if (!workspaceRoot) return;
+            const githubPath = path.join(workspaceRoot, '.github');
+            if (!fs.existsSync(githubPath)) {
+                vscode.window.showWarningMessage('.github 폴더가 없습니다.');
+                return;
+            }
+            await fileManager.download(githubPath, {});
+        }],
+
+        // 인스트럭션 업로드
+        ['wizInstruction.upload', async () => {
+            if (!workspaceRoot) return;
+            const githubPath = path.join(workspaceRoot, '.github');
+            if (!fs.existsSync(githubPath)) {
+                fs.mkdirSync(githubPath, { recursive: true });
+            }
+            await fileManager.upload(githubPath, context);
         }],
 
         // Build command
@@ -801,9 +862,14 @@ function activate(context) {
             await fileManager.createFolder(node?.resourceUri?.fsPath);
         }],
 
-        ['wizExplorer.delete', async (node) => {
-            if (!node) return;
-            await fileManager.delete(node.resourceUri.fsPath, {
+        ['wizExplorer.delete', async (node, selectedNodes) => {
+            const nodes = selectedNodes && selectedNodes.length > 1 ? selectedNodes : (node ? [node] : []);
+            if (nodes.length === 0) return;
+
+            const paths = nodes.filter(n => n.resourceUri).map(n => n.resourceUri.fsPath);
+            if (paths.length === 0) return;
+
+            await fileManager.deleteMultiple(paths, {
                 onDeleted: (deletedPath) => {
                     if (appEditorProvider.currentAppPath === deletedPath) {
                         appEditorProvider.currentWebviewPanel?.dispose();

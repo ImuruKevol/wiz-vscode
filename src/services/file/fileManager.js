@@ -97,6 +97,46 @@ class FileManager {
     }
 
     /**
+     * 여러 파일/폴더 일괄 삭제
+     * @param {string[]} paths - 삭제할 경로 배열
+     * @param {Object} options - 옵션
+     * @param {Function} [options.onDeleted] - 각 항목 삭제 후 콜백
+     * @returns {Promise<boolean>} 전체 성공 여부
+     */
+    async deleteMultiple(paths, options = {}) {
+        if (!paths || paths.length === 0) return false;
+
+        if (paths.length === 1) {
+            return this.delete(paths[0], options);
+        }
+
+        const names = paths.map(p => path.basename(p));
+        const confirm = await vscode.window.showWarningMessage(
+            `${paths.length}개 항목을 삭제하시겠습니까?\n${names.join(', ')}`,
+            { modal: true },
+            '삭제'
+        );
+
+        if (confirm !== '삭제') return false;
+
+        let success = true;
+        for (const targetPath of paths) {
+            try {
+                fs.rmSync(targetPath, { recursive: true, force: true });
+                if (options.onDeleted) {
+                    options.onDeleted(targetPath);
+                }
+            } catch (e) {
+                vscode.window.showErrorMessage(`삭제 실패 (${path.basename(targetPath)}): ${e.message}`);
+                success = false;
+            }
+        }
+
+        this.onRefresh();
+        return success;
+    }
+
+    /**
      * 파일/폴더 복사 (클립보드에 저장)
      * @param {string} sourcePath - 복사할 경로
      */

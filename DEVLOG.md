@@ -9,20 +9,31 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
+### v1.3.2 (TODO Viewer & Explorer Panel Redesign)
+
+- [104](./devlog/v1.3.2/104-instruction-improvements.md) - 인스트럭션 Git clone 로직 변경, 업로드 추가, 아이콘 변경
+- [103](./devlog/v1.3.2/103-task-upload-and-worked-click.md) - 작업관리 업로드 기능, worked 폴더 클릭 시 리뷰 에디터 열기
+- [102](./devlog/v1.3.2/102-explorer-panel-download.md) - 탐색기 패널 다운로드 기능 (작업관리, 인스트럭션)
+- [101](./devlog/v1.3.2/101-multi-select-delete.md) - 파일 다중 선택 삭제 기능
+- [100](./devlog/v1.3.2/100-explorer-panel-separation.md) - 탐색기 패널(뷰) 분리 (Info, 작업 관리, 인스트럭션, Explorer)
+- [099](./devlog/v1.3.2/099-markdown-viewer-remarkable.md) - 마크다운 뷰어 remarkable + highlight.js 전환
+- [098](./devlog/v1.3.2/098-explorer-panel-merge.md) - 탐색기 패널 통합 (wizCopilot + wizExplorer → 단일 뷰)
+- [097](./devlog/v1.3.2/097-markdown-viewer-showdown.md) - 마크다운 뷰어 showdown + github-markdown-css 라이브러리 전환
+- [096](./devlog/v1.3.2/096-instruction-confirm-and-markdown-viewer.md) - 인스트럭션 확인창 변경 및 GitHub 스타일 마크다운 뷰어 구현
+- [095](./devlog/v1.3.2/095-action-button-and-editor-ui-improvements.md) - 액션버튼 QuickPick 통합, 리뷰 에디터 UX 개선, 인스트럭션 마법사 아키텍처 분석 추가
+- [094](./devlog/v1.3.2/094-autoformat-fix-and-review-editor.md) - RichEditor 자동변환 keydown 전환 및 worked 리뷰 에디터 구현
+- [093](./devlog/v1.3.2/093-richeditor-autoformat-fix-and-image-blob.md) - RichEditor 자동변환 수정 및 이미지 blob 삽입 방식 전환
+- [092](./devlog/v1.3.2/092-richeditor-improvements-and-mcp-fix.md) - RichEditor 개선, TODO 뷰어 기능 보강, MCP 빌드 환경 수정
+- [091](./devlog/v1.3.2/091-editor-component-separation.md) - 에디터 컴포넌트 분리 및 TODO 뷰어 개선 (RichEditor 추출, 삭제 버튼, 인라인 편집)
+- [090](./devlog/v1.3.2/090-todo-viewer-overhaul.md) - TODO 목록 뷰어 전면 개편 (렌더링 버그, 리치 에디터, 싱글톤, 레이아웃 재설계)
+- [089](./devlog/v1.3.2/089-todo-viewer-improvements.md) - TODO 뷰어/에디터 UI 개선 5종 (글자수 정렬, 기본뷰어, 숫자 페이지네이션, 추가 동작, 리뷰 반영)
+- [088](./devlog/v1.3.2/088-todo-viewer-editor.md) - todo.md 에디터 뷰어 (페이지네이션, 추가/저장/마크다운 보기/작업 시작)
+- [087](./devlog/v1.3.2/087-todo-editor-ui-layout.md) - TODO 에디터 UI 레이아웃 개선 (헤더로 버튼 이동, 제목 제거, 프롬프트 변경)
+- [086](./devlog/v1.3.2/086-todo-editor-webview.md) - TODO 생성 기능 개선: Webview 리치 에디터 (이미지 업로드, Markdown 변환)
+- [085](./devlog/v1.3.2/085-mcp-copilot-infinite-loop-fix.md) - MCP Configuration / Copilot 탐색기 무한루프 수정 (getParent 경계 가드, auto-reveal 가드, 디바운스)
+
 ### v1.3.1 (Copilot Explorer & Task Management)
 
-- [096](./devlog/v1.3.1/096-instruction-confirm-and-markdown-viewer.md) - 인스트럭션 확인창 변경 및 GitHub 스타일 마크다운 뷰어 구현
-- [095](./devlog/v1.3.1/095-action-button-and-editor-ui-improvements.md) - 액션버튼 QuickPick 통합, 리뷰 에디터 UX 개선, 인스트럭션 마법사 아키텍처 분석 추가
-- [094](./devlog/v1.3.1/094-autoformat-fix-and-review-editor.md) - RichEditor 자동변환 keydown 전환 및 worked 리뷰 에디터 구현
-- [093](./devlog/v1.3.1/093-richeditor-autoformat-fix-and-image-blob.md) - RichEditor 자동변환 수정 및 이미지 blob 삽입 방식 전환
-- [092](./devlog/v1.3.1/092-richeditor-improvements-and-mcp-fix.md) - RichEditor 개선, TODO 뷰어 기능 보강, MCP 빌드 환경 수정
-- [091](./devlog/v1.3.1/091-editor-component-separation.md) - 에디터 컴포넌트 분리 및 TODO 뷰어 개선 (RichEditor 추출, 삭제 버튼, 인라인 편집)
-- [090](./devlog/v1.3.1/090-todo-viewer-overhaul.md) - TODO 목록 뷰어 전면 개편 (렌더링 버그, 리치 에디터, 싱글톤, 레이아웃 재설계)
-- [089](./devlog/v1.3.1/089-todo-viewer-improvements.md) - TODO 뷰어/에디터 UI 개선 5종 (글자수 정렬, 기본뷰어, 숫자 페이지네이션, 추가 동작, 리뷰 반영)
-- [088](./devlog/v1.3.1/088-todo-viewer-editor.md) - todo.md 에디터 뷰어 (페이지네이션, 추가/저장/마크다운 보기/작업 시작)
-- [087](./devlog/v1.3.1/087-todo-editor-ui-layout.md) - TODO 에디터 UI 레이아웃 개선 (헤더로 버튼 이동, 제목 제거, 프롬프트 변경)
-- [086](./devlog/v1.3.1/086-todo-editor-webview.md) - TODO 생성 기능 개선: Webview 리치 에디터 (이미지 업로드, Markdown 변환)
-- [085](./devlog/v1.3.1/085-mcp-copilot-infinite-loop-fix.md) - MCP Configuration / Copilot 탐색기 무한루프 수정 (getParent 경계 가드, auto-reveal 가드, 디바운스)
 - [084](./devlog/v1.3.1/084-copilot-explorer-refresh-fix.md) - Copilot Explorer 메모리 누수 수정 (블랭킷 리스너 제거, 타겟팅 refresh)
 - [083](./devlog/v1.3.1/083-todo-wizard.md) - TODO 생성 마법사 추가 및 작업 관리 버튼 순서 정렬
 - [082](./devlog/v1.3.1/082-task-category-wizard-buttons.md) - 작업 관리 카테고리에 리뷰 정리 마법사/작업 실행 버튼 추가

@@ -1,4 +1,4 @@
-# 086. TODO 생성 기능 개선 — Webview 리치 에디터 (v1.3.1)
+# 086. TODO 생성 기능 개선 — Webview 리치 에디터 (v1.3.2)
 
 ## 개요
 기존 `showInputBox` 다이얼로그 기반의 TODO 생성 마법사를 새 탭(Webview 패널)으로 전환하였다. CKEditor 스타일의 WYSIWYG 리치 텍스트 에디터를 제공하며, 이미지 업로드 및 Markdown 변환 기능을 포함한다.

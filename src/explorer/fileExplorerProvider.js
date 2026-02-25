@@ -6,7 +6,7 @@ const FileTreeItem = require('./treeItems/fileTreeItem');
 const AppGroupItem = require('./treeItems/appGroupItem');
 const EmptyItem = require('./treeItems/emptyItem');
 const AppPatternProcessor = require('./appPatternProcessor');
-const { SourceCategory, PortalCategory, ProjectCategory, ConfigCategory, SettingsCategory } = require('./models/categoryHandlers');
+const { SourceCategory, PortalCategory, ProjectCategory, ConfigCategory } = require('./models/categoryHandlers');
 const { FLAT_APP_TYPES, APP_TYPES, WizPathUtils } = require('../core');
 
 class FileExplorerProvider {
@@ -32,7 +32,6 @@ class FileExplorerProvider {
             : vscode.ThemeIcon.Folder;
 
         this.categories = [
-            new SettingsCategory(this),
             new SourceCategory(this),
             new PortalCategory(this),
             new ProjectCategory(this),

@@ -2,7 +2,7 @@
 
 A comprehensive VS Code extension for managing [Wiz Framework](https://github.com/season-framework/wiz) projects with an enhanced file explorer, specialized editors, and intelligent project navigation.
 
-[![Version](https://img.shields.io/badge/version-1.3.1-green.svg)](https://github.com/season-framework/wiz-vscode/releases/tag/v1.3.1)
+[![Version](https://img.shields.io/badge/version-1.3.2-green.svg)](https://github.com/season-framework/wiz-vscode/releases/tag/v1.3.2)
 [![Wiz](https://img.shields.io/badge/wiz-%3E%3D2.5.0-blue.svg)](https://github.com/season-framework/wiz)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.60+-purple.svg)](https://code.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -208,7 +208,7 @@ npm install
 ### From VSIX Package
 
 ```bash
-code --install-extension wiz-vscode-1.3.1.vsix
+code --install-extension wiz-vscode-1.3.2.vsix
 ```
 
 ### Building VSIX from Source
@@ -386,9 +386,9 @@ Open Developer Tools in Extension Host window
 
 ---
 
-## 📊 Latest Version: v1.3.1
+## 📊 Latest Version: v1.3.2
 
-See [Release Notes](./release/v1.3.1.md) for details on the current release.
+See [Release Notes](./release/v1.3.2.md) for details on the current release.
 
 All release notes are available in the [release/](./release/) directory.  
 Detailed development logs are maintained in [devlog/](./devlog/) and [DEVLOG.md](./DEVLOG.md).
