@@ -54,7 +54,7 @@ class TodoEditor extends EditorBase {
 
         const query = `아래 내용을 분석해서 TODO 작성해줘.\n\n${markdown}`;
         try {
-            await vscode.commands.executeCommand('workbench.action.chat.open', { query });
+            await vscode.commands.executeCommand('workbench.action.chat.open', { query, mode: 'agent' });
             this.dispose();
         } catch (e) {
             vscode.window.showWarningMessage(

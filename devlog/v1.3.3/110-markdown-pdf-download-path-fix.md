@@ -1,4 +1,4 @@
-# 110. 마크다운 PDF 다운로드 경로 지정 수정 (v1.3.2)
+# 110. 마크다운 PDF 다운로드 경로 지정 수정 (v1.3.3)
 
 ## 개요
 마크다운 뷰어 PDF 다운로드 시 ENOENT 에러가 발생하는 문제를 수정. 파일 저장 API를 `fs.writeFileSync` → `vscode.workspace.fs.writeFile`로 변경.

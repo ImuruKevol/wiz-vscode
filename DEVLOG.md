@@ -9,21 +9,24 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
-### v1.3.2 (TODO Viewer & Explorer Panel Redesign)
+### v1.3.3 (Memo Feature & Copilot Chat Agent Mode)
 
-- [117](./devlog/v1.3.2/117-memo-todo-apply-fix.md) - 메모 TODO 반영 동작 수정 및 작업관리 메뉴 상태 유지
-- [116](./devlog/v1.3.2/116-memo-edit-button-and-worked-count.md) - 메모 기본 편집기 버튼 추가 및 검토필요 파일 개수 표시
-- [115](./devlog/v1.3.2/115-memo-feature.md) - 메모 기능 구현 (MemoViewerEditor, TODO 반영 기능)
-- [114](./devlog/v1.3.2/114-remove-pdf-download.md) - 마크다운 PDF 다운로드 기능 제거 및 html2pdf.js 패키지 정리
-- [113](./devlog/v1.3.2/113-instruction-view-action-buttons.md) - 인스트럭션 뷰 액션 버튼 재구성 (통합 메뉴 + 파일/폴더 생성)
-- [112](./devlog/v1.3.2/112-task-view-naming-order.md) - 작업관리 하위 구조 순서 및 명칭 변경 (TODO/검토필요/완료됨)
-- [111](./devlog/v1.3.2/111-info-view-readme.md) - Info 뷰 README 기능 구현 (프리뷰/생성)
-- [110](./devlog/v1.3.2/110-markdown-pdf-download-path-fix.md) - 마크다운 PDF 다운로드 경로 지정 수정 (vscode.workspace.fs API 전환)
-- [109](./devlog/v1.3.2/109-mcp-readme-categorization.md) - MCP 기능 README 카테고리별 정리 (8개 카테고리, 36개 도구)
-- [108](./devlog/v1.3.2/108-markdown-viewer-download-button-verify.md) - 마크다운 뷰어 다운로드 버튼 복원 확인
-- [107](./devlog/v1.3.2/107-markdown-pdf-download-fix.md) - 마크다운 PDF 다운로드 수정 (외부 스크립트 로드, base64 전송)
-- [106](./devlog/v1.3.2/106-markdown-pdf-download.md) - 마크다운 프리뷰 PDF 다운로드 기능
-- [105](./devlog/v1.3.2/105-action-button-position-adjustment.md) - 액션 버튼 위치 조정 (Explorer → Info 뷰 이동)
+- [118](./devlog/v1.3.3/118-copilot-chat-agent-mode.md) - Copilot Chat Agent 모드 및 attachFiles API 적용
+- [117](./devlog/v1.3.3/117-memo-todo-apply-fix.md) - 메모 TODO 반영 동작 수정 및 작업관리 메뉴 상태 유지
+- [116](./devlog/v1.3.3/116-memo-edit-button-and-worked-count.md) - 메모 기본 편집기 버튼 추가 및 검토필요 파일 개수 표시
+- [115](./devlog/v1.3.3/115-memo-feature.md) - 메모 기능 구현 (MemoViewerEditor, TODO 반영 기능)
+- [114](./devlog/v1.3.3/114-remove-pdf-download.md) - 마크다운 PDF 다운로드 기능 제거 및 html2pdf.js 패키지 정리
+- [113](./devlog/v1.3.3/113-instruction-view-action-buttons.md) - 인스트럭션 뷰 액션 버튼 재구성 (통합 메뉴 + 파일/폴더 생성)
+- [112](./devlog/v1.3.3/112-task-view-naming-order.md) - 작업관리 하위 구조 순서 및 명칭 변경 (TODO/검토필요/완료됨)
+- [111](./devlog/v1.3.3/111-info-view-readme.md) - Info 뷰 README 기능 구현 (프리뷰/생성)
+- [110](./devlog/v1.3.3/110-markdown-pdf-download-path-fix.md) - 마크다운 PDF 다운로드 경로 지정 수정 (vscode.workspace.fs API 전환)
+- [109](./devlog/v1.3.3/109-mcp-readme-categorization.md) - MCP 기능 README 카테고리별 정리 (8개 카테고리, 36개 도구)
+- [108](./devlog/v1.3.3/108-markdown-viewer-download-button-verify.md) - 마크다운 뷰어 다운로드 버튼 복원 확인
+- [107](./devlog/v1.3.3/107-markdown-pdf-download-fix.md) - 마크다운 PDF 다운로드 수정 (외부 스크립트 로드, base64 전송)
+- [106](./devlog/v1.3.3/106-markdown-pdf-download.md) - 마크다운 프리뷰 PDF 다운로드 기능
+- [105](./devlog/v1.3.3/105-action-button-position-adjustment.md) - 액션 버튼 위치 조정 (Explorer → Info 뷰 이동)
+
+### v1.3.2 (TODO Viewer & Explorer Panel Redesign)
 - [104](./devlog/v1.3.2/104-instruction-improvements.md) - 인스트럭션 Git clone 로직 변경, 업로드 추가, 아이콘 변경
 - [103](./devlog/v1.3.2/103-task-upload-and-worked-click.md) - 작업관리 업로드 기능, worked 폴더 클릭 시 리뷰 에디터 열기
 - [102](./devlog/v1.3.2/102-explorer-panel-download.md) - 탐색기 패널 다운로드 기능 (작업관리, 인스트럭션)

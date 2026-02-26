@@ -91,7 +91,8 @@ class WorkedReviewEditor extends EditorBase {
     async handleReviewCleanup() {
         try {
             await vscode.commands.executeCommand('workbench.action.chat.open', {
-                query: '리뷰 정리해줘'
+                query: '리뷰 정리해줘',
+                mode: 'agent'
             });
             this.dispose();
         } catch (e) {

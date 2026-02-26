@@ -362,7 +362,8 @@ function activate(context) {
 
                 try {
                     await vscode.commands.executeCommand('workbench.action.chat.open', {
-                        query: prompt
+                        query: prompt,
+                        mode: 'agent'
                     });
                 } catch (e) {
                     vscode.window.showWarningMessage(
@@ -373,7 +374,8 @@ function activate(context) {
             } else if (selected.action === 'architecture') {
                 try {
                     await vscode.commands.executeCommand('workbench.action.chat.open', {
-                        query: '현재 프로젝트에 대해서 분석해서 custom 인스트럭션에 이 시스템을 고도화/유지보수하기 위한 가이드라인 및 참고할만한 시스템/서비스 아키텍처 문서들을 정리해줘. 커스텀 인스트럭션에는 간략한 수준으로 해야할 일에 따른 네비게이션 역할을 하는 내용만 작성해주고, 상세 문서는 별도로 만들어줘.'
+                        query: '현재 프로젝트에 대해서 분석해서 custom 인스트럭션에 이 시스템을 고도화/유지보수하기 위한 가이드라인 및 참고할만한 시스템/서비스 아키텍처 문서들을 정리해줘. 커스텀 인스트럭션에는 간략한 수준으로 해야할 일에 따른 네비게이션 역할을 하는 내용만 작성해주고, 상세 문서는 별도로 만들어줘.',
+                        mode: 'agent'
                     });
                 } catch (e) {
                     vscode.window.showWarningMessage(
@@ -413,9 +415,10 @@ function activate(context) {
             }
             const todoPath = path.join(workspaceRoot, '.github', 'task', 'todo.md');
             try {
-                const todoUri = vscode.Uri.file(todoPath);
                 await vscode.commands.executeCommand('workbench.action.chat.open', {
-                    query: `#file:${todoPath} 작업 수행해줘`
+                    query: '작업 수행해줘',
+                    mode: 'agent',
+                    attachFiles: [vscode.Uri.file(todoPath)]
                 });
             } catch (e) {
                 vscode.window.showWarningMessage(
@@ -464,7 +467,9 @@ function activate(context) {
                     const todoPath = path.join(workspaceRoot, '.github', 'task', 'todo.md');
                     try {
                         await vscode.commands.executeCommand('workbench.action.chat.open', {
-                            query: `#file:${todoPath} 작업 수행해줘`
+                            query: '작업 수행해줘',
+                            mode: 'agent',
+                            attachFiles: [vscode.Uri.file(todoPath)]
                         });
                     } catch (e) {
                         vscode.window.showWarningMessage(

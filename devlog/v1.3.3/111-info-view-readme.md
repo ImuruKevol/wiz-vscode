@@ -1,4 +1,4 @@
-# 111. Info 뷰 README 기능 구현 (v1.3.2)
+# 111. Info 뷰 README 기능 구현 (v1.3.3)
 
 ## 개요
 Info 뷰 상단에 README 항목을 추가하여 프로젝트 경로의 README.md를 마크다운 프리뷰로 여는 기능 구현.

@@ -110,7 +110,9 @@ class TodoViewerEditor extends EditorBase {
     async handleRunTask() {
         try {
             await vscode.commands.executeCommand('workbench.action.chat.open', {
-                query: `#file:${this.todoFilePath} 작업 수행해줘`
+                query: '작업 수행해줘',
+                mode: 'agent',
+                attachFiles: [vscode.Uri.file(this.todoFilePath)]
             });
             this.dispose();
         } catch (e) {
@@ -124,7 +126,8 @@ class TodoViewerEditor extends EditorBase {
     async handleReviewWizard() {
         try {
             await vscode.commands.executeCommand('workbench.action.chat.open', {
-                query: '리뷰 정리해줘'
+                query: '리뷰 정리해줘',
+                mode: 'agent'
             });
             this.dispose();
         } catch (e) {
