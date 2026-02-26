@@ -11,6 +11,7 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.2 (TODO Viewer & Explorer Panel Redesign)
 
+- [105](./devlog/v1.3.2/105-action-button-position-adjustment.md) - 액션 버튼 위치 조정 (Explorer → Info 뷰 이동)
 - [104](./devlog/v1.3.2/104-instruction-improvements.md) - 인스트럭션 Git clone 로직 변경, 업로드 추가, 아이콘 변경
 - [103](./devlog/v1.3.2/103-task-upload-and-worked-click.md) - 작업관리 업로드 기능, worked 폴더 클릭 시 리뷰 에디터 열기
 - [102](./devlog/v1.3.2/102-explorer-panel-download.md) - 탐색기 패널 다운로드 기능 (작업관리, 인스트럭션)

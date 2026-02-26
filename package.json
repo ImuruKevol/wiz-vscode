@@ -464,17 +464,17 @@
       "view/title": [
         {
           "command": "wizExplorer.refresh",
-          "when": "view == wizExplorer",
+          "when": "view == wizInfo",
           "group": "navigation@1"
         },
         {
           "command": "wizExplorer.build",
-          "when": "view == wizExplorer",
+          "when": "view == wizInfo",
           "group": "navigation@2"
         },
         {
           "command": "wizExplorer.switchProject",
-          "when": "view == wizExplorer",
+          "when": "view == wizInfo",
           "group": "navigation@3"
         },
         {
