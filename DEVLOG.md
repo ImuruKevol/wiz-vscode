@@ -11,6 +11,10 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.2 (TODO Viewer & Explorer Panel Redesign)
 
+- [109](./devlog/v1.3.2/109-mcp-readme-categorization.md) - MCP 기능 README 카테고리별 정리 (8개 카테고리, 36개 도구)
+- [108](./devlog/v1.3.2/108-markdown-viewer-download-button-verify.md) - 마크다운 뷰어 다운로드 버튼 복원 확인
+- [107](./devlog/v1.3.2/107-markdown-pdf-download-fix.md) - 마크다운 PDF 다운로드 수정 (외부 스크립트 로드, base64 전송)
+- [106](./devlog/v1.3.2/106-markdown-pdf-download.md) - 마크다운 프리뷰 PDF 다운로드 기능
 - [105](./devlog/v1.3.2/105-action-button-position-adjustment.md) - 액션 버튼 위치 조정 (Explorer → Info 뷰 이동)
 - [104](./devlog/v1.3.2/104-instruction-improvements.md) - 인스트럭션 Git clone 로직 변경, 업로드 추가, 아이콘 변경
 - [103](./devlog/v1.3.2/103-task-upload-and-worked-click.md) - 작업관리 업로드 기능, worked 폴더 클릭 시 리뷰 에디터 열기

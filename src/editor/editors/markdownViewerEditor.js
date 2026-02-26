@@ -57,7 +57,22 @@ class MarkdownViewerEditor extends EditorBase {
 
     async open() {
         const fileName = path.basename(this.filePath);
-        this.createPanel('wizMarkdownViewer', fileName, vscode.ViewColumn.Active);
+
+        // createPanel with localResourceRoots for external script loading (html2pdf.js)
+        this.dispose();
+        const nodeModulesUri = vscode.Uri.file(path.join(this.context.extensionPath, 'node_modules'));
+        this.panel = vscode.window.createWebviewPanel(
+            'wizMarkdownViewer', fileName, vscode.ViewColumn.Active,
+            {
+                enableScripts: true,
+                retainContextWhenHidden: true,
+                localResourceRoots: [nodeModulesUri]
+            }
+        );
+        this.panel.onDidDispose(() => {
+            this.panel = undefined;
+            this.onDispose();
+        });
 
         this._renderContent();
 
@@ -72,6 +87,27 @@ class MarkdownViewerEditor extends EditorBase {
                 case 'openInEditor': {
                     const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(this.filePath));
                     await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active);
+                    break;
+                }
+                case 'downloadPdf': {
+                    try {
+                        const pdfName = path.basename(this.filePath, '.md') + '.pdf';
+                        const uri = await vscode.window.showSaveDialog({
+                            defaultUri: vscode.Uri.file(path.join(path.dirname(this.filePath), pdfName)),
+                            filters: { 'PDF': ['pdf'] }
+                        });
+                        if (uri) {
+                            const buffer = Buffer.from(message.data, 'base64');
+                            fs.writeFileSync(uri.fsPath, buffer);
+                            vscode.window.showInformationMessage('PDF 파일이 저장되었습니다.');
+                        }
+                    } catch (e) {
+                        vscode.window.showErrorMessage(`PDF 저장 실패: ${e.message}`);
+                    }
+                    break;
+                }
+                case 'pdfError': {
+                    vscode.window.showErrorMessage(`PDF 변환 실패: ${message.error}`);
                     break;
                 }
             }
@@ -99,6 +135,11 @@ class MarkdownViewerEditor extends EditorBase {
         const hljsCssPath = path.join(this.context.extensionPath, 'node_modules', 'highlight.js', 'styles', 'github.css');
         let hljsCss = '';
         try { hljsCss = fs.readFileSync(hljsCssPath, 'utf8'); } catch (_) { /* ignore */ }
+
+        // Get webview URI for html2pdf.js (external script to avoid template literal issues)
+        const html2pdfUri = this.panel.webview.asWebviewUri(
+            vscode.Uri.file(path.join(this.context.extensionPath, 'node_modules', 'html2pdf.js', 'dist', 'html2pdf.bundle.min.js'))
+        );
 
         return `<!DOCTYPE html>
 <html>
@@ -146,6 +187,8 @@ class MarkdownViewerEditor extends EditorBase {
             white-space: nowrap;
         }
         .header-right {
+            display: flex;
+            gap: 6px;
             flex-shrink: 0;
         }
 
@@ -266,6 +309,7 @@ class MarkdownViewerEditor extends EditorBase {
             <span class="filename" title="${fileName}">${fileName}</span>
         </div>
         <div class="header-right">
+            <button class="btn btn-secondary" id="btnPdf" title="PDF로 다운로드">📥 PDF</button>
             <button class="btn btn-secondary" id="btnEdit" title="기본 에디터로 열기">✏️ 편집하기</button>
         </div>
     </div>
@@ -273,10 +317,45 @@ class MarkdownViewerEditor extends EditorBase {
         <article class="markdown-body" id="content">${renderedHtml}</article>
     </div>
 
+    <script src="${html2pdfUri}"></script>
     <script>
         const vscode = acquireVsCodeApi();
         document.getElementById('btnEdit').addEventListener('click', () => {
             vscode.postMessage({ command: 'openInEditor' });
+        });
+
+        document.getElementById('btnPdf').addEventListener('click', () => {
+            const btn = document.getElementById('btnPdf');
+            btn.disabled = true;
+            btn.textContent = '⏳ 변환 중...';
+
+            const element = document.getElementById('content');
+            const opt = {
+                margin: 10,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(element).set(opt).outputPdf('arraybuffer').then(function(pdfBuffer) {
+                // base64 인코딩으로 안전한 postMessage 전달
+                const bytes = new Uint8Array(pdfBuffer);
+                let binary = '';
+                const chunkSize = 8192;
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+                }
+                vscode.postMessage({
+                    command: 'downloadPdf',
+                    data: btoa(binary)
+                });
+                btn.disabled = false;
+                btn.textContent = '📥 PDF';
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '📥 PDF';
+                vscode.postMessage({ command: 'pdfError', error: err.message || String(err) });
+            });
         });
     </script>
 </body>

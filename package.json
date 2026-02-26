@@ -602,7 +602,6 @@
           "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == folder || viewItem == configCategory || viewItem == copilotCategory || viewItem == sourceRootFolder || viewItem == portalRootFolder || viewItem == taskCategory)",
           "group": "z_reveal"
         },
-
         {
           "command": "wizCopilot.openTodoInDefaultEditor",
           "when": "view == wizTask && viewItem == todoFile",
@@ -928,6 +927,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "archiver": "^5.3.1",
     "highlight.js": "^11.11.1",
+    "html2pdf.js": "^0.14.0",
     "remarkable": "^2.0.1"
   },
   "devDependencies": {

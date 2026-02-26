@@ -37,44 +37,75 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 ### 🤖 MCP (Model Context Protocol) Integration
 Built-in MCP server that allows AI agents (like Claude) to directly manage Wiz projects. The MCP server **automatically syncs with the VS Code Explorer** — when you switch projects, the MCP server reflects the change in real-time via a shared state file.
 
+**36 tools** across 8 categories:
+
+#### 🔍 Workspace State (1)
 | Tool | Description |
 |------|-------------|
 | `wiz_get_workspace_state` | Get current workspace/project state (synced from Explorer) |
+
+#### 📁 Project Management (5)
+| Tool | Description |
+|------|-------------|
 | `wiz_get_project_info` | Get comprehensive project info (apps, packages, paths) |
 | `wiz_list_projects` | List all projects in workspace |
 | `wiz_switch_project` | Switch project (syncs back to Explorer) |
+| `wiz_export_project` | Export project as `.wizproject` archive |
+| `wiz_import_project` | Import `.wizproject` file as new project |
+
+#### 🔨 Build (1)
+| Tool | Description |
+|------|-------------|
 | `wiz_build` | Build project (Normal/Clean) |
-| `wiz_list_apps` | List apps (page, component, layout, route) |
+
+#### 🧩 App Management (9)
+| Tool | Description |
+|------|-------------|
+| `wiz_list_apps` | List apps with filter (page, component, layout, route, all) |
 | `wiz_get_app_info` | Get detailed app info and file list |
-| `wiz_create_app` | Create new standard app |
-| `wiz_create_route` | Create new route |
+| `wiz_create_app` | Create new standard app (page, component, layout) |
+| `wiz_create_route` | Create new route (API endpoint) |
 | `wiz_create_portal_app` | Create portal app in package |
 | `wiz_create_portal_route` | Create portal route in package |
 | `wiz_update_app` | Update app.json configuration |
 | `wiz_delete_app` | Delete an app/route |
 | `wiz_search_apps` | Search apps by keyword |
-| `wiz_read_app_file` | Read app file (view.html, view.ts, etc.) |
-| `wiz_write_app_file` | Write app file |
+
+#### 📦 Package Management (3)
+| Tool | Description |
+|------|-------------|
 | `wiz_list_packages` | List Portal packages |
-| `wiz_create_package` | Create new package |
-| `wiz_export_package` | Export package as .wizpkg |
-| `wiz_get_project_structure` | Get directory tree structure |
-| `wiz_list_directory` | List directory contents |
-| `wiz_read_file` | Read any file (with line range) |
-| `wiz_write_file` | Write/create any file |
-| `wiz_create_folder` | Create directory |
-| `wiz_delete_file` | Delete file/directory |
-| `wiz_rename_file` | Rename/move file |
-| `wiz_list_controllers` | List Python controllers |
-| `wiz_list_layouts` | List layout apps |
-| `wiz_export_project` | Export project |
-| `wiz_import_project` | Import project |
-| `wiz_pip_list` | List installed pip packages |
-| `wiz_pip_install` | Install pip package(s) |
+| `wiz_create_package` | Create new package via wiz CLI |
+| `wiz_export_package` | Export package as `.wizpkg` archive |
+
+#### 🐍 Dependency Management (6)
+| Tool | Description |
+|------|-------------|
+| `wiz_pip_list` | List installed pip packages (with outdated check) |
+| `wiz_pip_install` | Install pip package(s) (with version specifier) |
 | `wiz_pip_uninstall` | Uninstall pip package(s) |
 | `wiz_npm_list` | List installed npm packages |
-| `wiz_npm_install` | Install npm package(s) |
+| `wiz_npm_install` | Install npm package(s) (with dev/global flags) |
 | `wiz_npm_uninstall` | Uninstall npm package(s) |
+
+#### 📂 File System (7)
+| Tool | Description |
+|------|-------------|
+| `wiz_get_project_structure` | Get directory tree structure (with depth control) |
+| `wiz_list_directory` | List directory contents |
+| `wiz_read_file` | Read any file (with line range support) |
+| `wiz_write_file` | Write/create any file |
+| `wiz_create_folder` | Create directory (recursive) |
+| `wiz_delete_file` | Delete file/directory |
+| `wiz_rename_file` | Rename/move file |
+
+#### ⚡ App File Shortcuts & Helpers (4)
+| Tool | Description |
+|------|-------------|
+| `wiz_read_app_file` | Read app file by name (view.html, view.ts, etc.) |
+| `wiz_write_app_file` | Write app file by name |
+| `wiz_list_controllers` | List Python controllers |
+| `wiz_list_layouts` | List layout apps |
 
 > **Note**: `workspacePath` and `projectName` are **automatically injected** from the Explorer state. Relative paths (e.g., `portal/dizest/app/drive`) are auto-resolved to the project's `src/` directory.
 
