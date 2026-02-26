@@ -17,6 +17,7 @@ const NpmEditor = require('./editor/editors/npmEditor');
 const PipEditor = require('./editor/editors/pipEditor');
 const TodoEditor = require('./editor/editors/todoEditor');
 const TodoViewerEditor = require('./editor/editors/todoViewerEditor');
+const MemoViewerEditor = require('./editor/editors/memoViewerEditor');
 const WorkedReviewEditor = require('./editor/editors/workedReviewEditor');
 const MarkdownViewerEditor = require('./editor/editors/markdownViewerEditor');
 const { WizPathUtils } = require('./core');
@@ -693,6 +694,69 @@ function activate(context) {
             await fileManager.upload(githubPath, context);
         }],
 
+        // 인스트럭션 액션 메뉴 (git/다운로드/업로드 통합)
+        ['wizInstruction.actionMenu', async () => {
+            const pick = await vscode.window.showQuickPick([
+                { label: '$(repo-clone) Git에서 불러오기', id: 'git' },
+                { label: '$(cloud-download) 다운로드', id: 'download' },
+                { label: '$(cloud-upload) 업로드', id: 'upload' }
+            ], { title: '인스트럭션 관리', placeHolder: '작업을 선택하세요' });
+            if (!pick) return;
+            if (pick.id === 'git') {
+                await vscode.commands.executeCommand('wizExplorer.importGithubFromGit');
+            } else if (pick.id === 'download') {
+                await vscode.commands.executeCommand('wizInstruction.download');
+            } else if (pick.id === 'upload') {
+                await vscode.commands.executeCommand('wizInstruction.upload');
+            }
+        }],
+
+        // 인스트럭션 새 파일 생성
+        ['wizInstruction.newFile', async () => {
+            if (!workspaceRoot) return;
+            const githubPath = path.join(workspaceRoot, '.github');
+            if (!fs.existsSync(githubPath)) {
+                fs.mkdirSync(githubPath, { recursive: true });
+            }
+            const fileName = await vscode.window.showInputBox({
+                title: '새 파일 생성',
+                prompt: '파일 이름을 입력하세요',
+                placeHolder: 'example.md'
+            });
+            if (!fileName) return;
+            const filePath = path.join(githubPath, fileName);
+            if (fs.existsSync(filePath)) {
+                vscode.window.showWarningMessage(`'${fileName}' 파일이 이미 존재합니다.`);
+                return;
+            }
+            fs.writeFileSync(filePath, '', 'utf8');
+            fileExplorerProvider.refresh();
+            const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
+            await vscode.window.showTextDocument(doc);
+        }],
+
+        // 인스트럭션 새 폴더 생성
+        ['wizInstruction.newFolder', async () => {
+            if (!workspaceRoot) return;
+            const githubPath = path.join(workspaceRoot, '.github');
+            if (!fs.existsSync(githubPath)) {
+                fs.mkdirSync(githubPath, { recursive: true });
+            }
+            const folderName = await vscode.window.showInputBox({
+                title: '새 폴더 생성',
+                prompt: '폴더 이름을 입력하세요',
+                placeHolder: 'new-folder'
+            });
+            if (!folderName) return;
+            const folderPath = path.join(githubPath, folderName);
+            if (fs.existsSync(folderPath)) {
+                vscode.window.showWarningMessage(`'${folderName}' 폴더가 이미 존재합니다.`);
+                return;
+            }
+            fs.mkdirSync(folderPath, { recursive: true });
+            fileExplorerProvider.refresh();
+        }],
+
         // Build command
         ['wizExplorer.build', () => buildManager.normalBuild()],
         ['wizExplorer.selectBuildPythonInterpreter', () => buildManager.selectBuildPythonInterpreter()],
@@ -780,6 +844,22 @@ function activate(context) {
             } catch (e) {
                 vscode.window.showWarningMessage(`클립보드 복사 실패: ${displayProjectName}`);
             }
+        }],
+
+        // Create README.md
+        ['wizExplorer.createReadme', async () => {
+            const projectPath = fileExplorerProvider.workspaceRoot;
+            if (!projectPath) {
+                vscode.window.showWarningMessage('프로젝트 경로를 찾을 수 없습니다.');
+                return;
+            }
+            const readmePath = path.join(projectPath, 'README.md');
+            const projectName = fileExplorerProvider.currentProjectName || 'main';
+            const content = `# ${projectName}\n\nProject README\n`;
+            fs.writeFileSync(readmePath, content, 'utf8');
+            fileExplorerProvider.refresh();
+            const MarkdownViewerEditor = require('./editor/editors/markdownViewerEditor');
+            await MarkdownViewerEditor.openOrCreate(context, readmePath);
         }],
 
         // New App
@@ -919,6 +999,11 @@ function activate(context) {
                 // todo.md → 커스텀 뷰어로 열기
                 if (path.basename(fsPath) === 'todo.md' && fsPath.includes(path.join('.github', 'task'))) {
                     await TodoViewerEditor.openOrCreate(context, fsPath);
+                    return;
+                }
+                // memo.md → 메모 뷰어로 열기
+                if (path.basename(fsPath) === 'memo.md' && fsPath.includes(path.join('.github', 'task'))) {
+                    await MemoViewerEditor.openOrCreate(context, fsPath);
                     return;
                 }
                 // .md 파일 → 마크다운 뷰어로 열기

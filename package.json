@@ -154,6 +154,21 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "wizInstruction.actionMenu",
+        "title": "인스트럭션 관리",
+        "icon": "$(ellipsis)"
+      },
+      {
+        "command": "wizInstruction.newFile",
+        "title": "새 파일",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "wizInstruction.newFolder",
+        "title": "새 폴더",
+        "icon": "$(new-folder)"
+      },
+      {
         "command": "wizExplorer.build",
         "title": "Wiz: Build Project",
         "icon": "$(tools)"
@@ -191,6 +206,11 @@
         "command": "wizExplorer.copyProjectName",
         "title": "Wiz: Copy Current Project Name",
         "icon": "$(copy)"
+      },
+      {
+        "command": "wizExplorer.createReadme",
+        "title": "Wiz: Create README",
+        "icon": "$(book)"
       },
       {
         "command": "wizExplorer.exportCurrentProject",
@@ -498,17 +518,17 @@
           "group": "navigation@1"
         },
         {
-          "command": "wizExplorer.importGithubFromGit",
+          "command": "wizInstruction.newFile",
           "when": "view == wizInstruction",
           "group": "navigation@2"
         },
         {
-          "command": "wizInstruction.upload",
+          "command": "wizInstruction.newFolder",
           "when": "view == wizInstruction",
           "group": "navigation@3"
         },
         {
-          "command": "wizInstruction.download",
+          "command": "wizInstruction.actionMenu",
           "when": "view == wizInstruction",
           "group": "navigation@4"
         }
@@ -569,7 +589,7 @@
         },
         {
           "command": "wizExplorer.copy",
-          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
+          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == memoFile || viewItem == folder || viewItem == configCategory || viewItem == copilotCategory)",
           "group": "2_clipboard"
         },
         {
@@ -579,12 +599,12 @@
         },
         {
           "command": "wizExplorer.rename",
-          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == memoFile || viewItem == folder || viewItem == portalPackage)",
           "group": "3_modification"
         },
         {
           "command": "wizExplorer.delete",
-          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
+          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == memoFile || viewItem == folder || viewItem == appItem || viewItem == portalPackage)",
           "group": "3_delete"
         },
         {
@@ -594,7 +614,7 @@
         },
         {
           "command": "wizExplorer.downloadFile",
-          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
+          "when": "(view == wizExplorer || view == wizTask || view == wizInstruction) && (viewItem == file || viewItem == todoFile || viewItem == memoFile || viewItem == folder || viewItem == portalPackage || viewItem == appItem || viewItem == sourceRootFolder || viewItem == portalRootFolder)",
           "group": "z_reveal"
         },
         {
@@ -604,7 +624,7 @@
         },
         {
           "command": "wizCopilot.openTodoInDefaultEditor",
-          "when": "view == wizTask && viewItem == todoFile",
+          "when": "view == wizTask && (viewItem == todoFile || viewItem == memoFile)",
           "group": "inline"
         }
       ],
@@ -664,6 +684,10 @@
         {
           "command": "wizExplorer.copyProjectName",
           "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "wizExplorer.createReadme",
+          "when": "false"
         },
         {
           "command": "wizExplorer.exportCurrentProject",
@@ -876,6 +900,18 @@
         {
           "command": "wizInstruction.upload",
           "when": "false"
+        },
+        {
+          "command": "wizInstruction.actionMenu",
+          "when": "false"
+        },
+        {
+          "command": "wizInstruction.newFile",
+          "when": "false"
+        },
+        {
+          "command": "wizInstruction.newFolder",
+          "when": "false"
         }
       ]
     },
@@ -927,7 +963,6 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "archiver": "^5.3.1",
     "highlight.js": "^11.11.1",
-    "html2pdf.js": "^0.14.0",
     "remarkable": "^2.0.1"
   },
   "devDependencies": {

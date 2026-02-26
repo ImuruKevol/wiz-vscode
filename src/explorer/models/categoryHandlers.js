@@ -206,7 +206,35 @@ class SettingsCategory extends CategoryItem {
         const version = this.provider.extensionVersion || 'unknown';
         const projectName = this.provider.currentProjectName || 'main';
 
-        // 0. Current Project (copy on click)
+        // 0. README
+        const readmePath = this.provider.workspaceRoot
+            ? path.join(this.provider.workspaceRoot, 'README.md')
+            : null;
+        const readmeExists = readmePath && fs.existsSync(readmePath);
+        const readmeItem = new vscode.TreeItem(
+            readmeExists ? 'README' : 'README',
+            vscode.TreeItemCollapsibleState.None
+        );
+        readmeItem.iconPath = new vscode.ThemeIcon(readmeExists ? 'book' : 'book');
+        if (readmeExists) {
+            readmeItem.command = {
+                command: 'wizExplorer.openFile',
+                title: 'Open README',
+                arguments: [{ resourceUri: vscode.Uri.file(readmePath) }]
+            };
+            readmeItem.contextValue = 'settingsItem';
+        } else {
+            readmeItem.description = '(생성)';
+            readmeItem.iconPath = new vscode.ThemeIcon('book', new vscode.ThemeColor('disabledForeground'));
+            readmeItem.command = {
+                command: 'wizExplorer.createReadme',
+                title: 'Create README'
+            };
+            readmeItem.contextValue = 'settingsItem';
+        }
+        items.push(readmeItem);
+
+        // 1. Current Project (copy on click)
         const projectItem = new vscode.TreeItem(`project: ${projectName}`, vscode.TreeItemCollapsibleState.None);
         projectItem.iconPath = new vscode.ThemeIcon('symbol-string');
         projectItem.command = {
@@ -361,22 +389,105 @@ class TaskCategory extends CategoryItem {
     async getChildren() {
         if (!this.provider.wizRoot) return [];
         const taskPath = path.join(this.provider.wizRoot, '.github', 'task');
-        if (!fs.existsSync(taskPath)) return [];
-        const items = this.provider.getFilesAndFolders(taskPath);
-        for (const item of items) {
-            if (!item.isDirectory && item.label === 'todo.md') {
+
+        // 폴더가 없어도 가상 항목(메모, TODO) 표시
+        if (!fs.existsSync(taskPath)) {
+            const items = [];
+
+            const memoPath = path.join(taskPath, 'memo.md');
+            const memoItem = new vscode.TreeItem('메모', vscode.TreeItemCollapsibleState.None);
+            memoItem.iconPath = new vscode.ThemeIcon('note', new vscode.ThemeColor('disabledForeground'));
+            memoItem.description = '(생성)';
+            memoItem.contextValue = 'memoFile';
+            memoItem.resourceUri = vscode.Uri.file(memoPath);
+            memoItem.command = {
+                command: 'wizExplorer.openFile',
+                title: 'Open Memo',
+                arguments: [{ resourceUri: vscode.Uri.file(memoPath), isDirectory: false }]
+            };
+            items.push(memoItem);
+
+            const todoPath = path.join(taskPath, 'todo.md');
+            const todoItem = new vscode.TreeItem('TODO', vscode.TreeItemCollapsibleState.None);
+            todoItem.iconPath = new vscode.ThemeIcon('checklist', new vscode.ThemeColor('disabledForeground'));
+            todoItem.description = '(생성)';
+            todoItem.contextValue = 'todoFile';
+            todoItem.resourceUri = vscode.Uri.file(todoPath);
+            todoItem.command = {
+                command: 'wizExplorer.openFile',
+                title: 'Open TODO',
+                arguments: [{ resourceUri: vscode.Uri.file(todoPath), isDirectory: false }]
+            };
+            items.push(todoItem);
+
+            return items;
+        }
+
+        const rawItems = this.provider.getFilesAndFolders(taskPath);
+
+        // 표시명 매핑 및 특수 처리
+        const displayNameMap = { 'memo.md': '메모', 'todo.md': 'TODO', 'worked': '검토필요', 'reviewed': '완료됨' };
+        const sortOrder = { 'memo.md': 0, 'todo.md': 1, 'worked': 2, 'reviewed': 3 };
+
+        // memo.md가 없으면 가상 항목 추가
+        const hasMemo = rawItems.some(item => item.label === 'memo.md');
+        if (!hasMemo) {
+            const memoPath = path.join(taskPath, 'memo.md');
+            const memoItem = new vscode.TreeItem('메모', vscode.TreeItemCollapsibleState.None);
+            memoItem.iconPath = new vscode.ThemeIcon('note', new vscode.ThemeColor('disabledForeground'));
+            memoItem.description = '(생성)';
+            memoItem.contextValue = 'memoFile';
+            memoItem.resourceUri = vscode.Uri.file(memoPath);
+            memoItem.command = {
+                command: 'wizExplorer.openFile',
+                title: 'Open Memo',
+                arguments: [{ resourceUri: vscode.Uri.file(memoPath), isDirectory: false }]
+            };
+            memoItem._sortKey = 'memo.md';
+            rawItems.push(memoItem);
+        }
+
+        for (const item of rawItems) {
+            const originalName = item.label;
+            // 표시명 변경 (파일/디렉토리 실제 이름은 유지)
+            if (displayNameMap[originalName]) {
+                item.label = displayNameMap[originalName];
+            }
+            if (!item.isDirectory && originalName === 'todo.md') {
                 item.contextValue = 'todoFile';
             }
-            if (item.isDirectory && item.label === 'worked') {
+            if (!item.isDirectory && originalName === 'memo.md') {
+                item.contextValue = 'memoFile';
+            }
+            if (item.isDirectory && originalName === 'worked') {
                 item.contextValue = 'workedFolder';
                 // 클릭 시 리뷰 에디터 열기 (화살표로만 폴더 확장)
                 item.command = {
                     command: 'wizCopilot.reviewWizard',
                     title: 'Open Review Editor'
                 };
+                // 하위 파일 개수 표시
+                const workedFullPath = path.join(taskPath, 'worked');
+                try {
+                    const count = fs.readdirSync(workedFullPath).filter(f => f.endsWith('.md')).length;
+                    if (count > 0) {
+                        item.description = `${count}`;
+                    }
+                } catch (e) { /* ignore */ }
             }
         }
-        return items;
+
+        // 정렬: 메모 → TODO → 검토필요 → 완료됨 → 나머지(알파벳순)
+        rawItems.sort((a, b) => {
+            const aKey = Object.keys(displayNameMap).find(k => displayNameMap[k] === a.label) || a._sortKey;
+            const bKey = Object.keys(displayNameMap).find(k => displayNameMap[k] === b.label) || b._sortKey;
+            const aOrder = aKey !== undefined ? (sortOrder[aKey] ?? 100) : 100;
+            const bOrder = bKey !== undefined ? (sortOrder[bKey] ?? 100) : 100;
+            if (aOrder !== bOrder) return aOrder - bOrder;
+            return String(a.label).localeCompare(String(b.label));
+        });
+
+        return rawItems;
     }
 }
 
