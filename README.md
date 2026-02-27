@@ -37,77 +37,78 @@ A comprehensive VS Code extension for managing [Wiz Framework](https://github.co
 ### 🤖 MCP (Model Context Protocol) Integration
 Built-in MCP server that allows AI agents (like Claude) to directly manage Wiz projects. The MCP server **automatically syncs with the VS Code Explorer** — when you switch projects, the MCP server reflects the change in real-time via a shared state file.
 
-**36 tools** across 8 categories:
+**54 tools** across 4 categories:
 
-#### 🔍 Workspace State (1)
+#### 🌐 Workspace (7)
 | Tool | Description |
 |------|-------------|
-| `wiz_get_workspace_state` | Get current workspace/project state (synced from Explorer) |
+| `wiz_workspace_status` | Get workspace state, active project, and project list |
+| `wiz_workspace_list_dir` | List directory contents (relative to workspace root) |
+| `wiz_workspace_read_file` | Read file (relative to workspace root, line range support) |
+| `wiz_workspace_write_file` | Write file (relative to workspace root) |
+| `wiz_workspace_create_dir` | Create directory |
+| `wiz_workspace_delete` | Delete file/directory |
+| `wiz_workspace_rename` | Rename/move file or directory |
 
-#### 📁 Project Management (5)
+#### 📁 Project (19)
 | Tool | Description |
 |------|-------------|
-| `wiz_get_project_info` | Get comprehensive project info (apps, packages, paths) |
-| `wiz_list_projects` | List all projects in workspace |
-| `wiz_switch_project` | Switch project (syncs back to Explorer) |
-| `wiz_export_project` | Export project as `.wizproject` archive |
-| `wiz_import_project` | Import `.wizproject` file as new project |
+| `wiz_project_info` | Get comprehensive project info (apps, packages, paths) |
+| `wiz_project_switch` | Switch active project (syncs with Explorer) |
+| `wiz_project_build` | Build project (Normal/Clean) |
+| `wiz_project_export` | Export project as `.wizproject` archive |
+| `wiz_project_import` | Import `.wizproject` file as new project |
+| `wiz_project_structure` | Get project src/ directory tree |
+| `wiz_project_list_dir` | List directory (relative to project root) |
+| `wiz_project_read_file` | Read file (relative to project root, line range) |
+| `wiz_project_write_file` | Write file (relative to project root) |
+| `wiz_project_create_dir` | Create directory in project |
+| `wiz_project_delete` | Delete file/directory in project |
+| `wiz_project_rename` | Rename/move in project |
+| `wiz_project_search_apps` | Search apps by keyword (source + packages) |
+| `wiz_project_pip_list` | List installed pip packages |
+| `wiz_project_pip_install` | Install pip package(s) |
+| `wiz_project_pip_uninstall` | Uninstall pip package(s) |
+| `wiz_project_npm_list` | List installed npm packages |
+| `wiz_project_npm_install` | Install npm package(s) |
+| `wiz_project_npm_uninstall` | Uninstall npm package(s) |
 
-#### 🔨 Build (1)
+#### 🧩 Source (13)
 | Tool | Description |
 |------|-------------|
-| `wiz_build` | Build project (Normal/Clean) |
+| `wiz_source_list_apps` | List source apps/routes (filter by type) |
+| `wiz_source_app_info` | Get app details and file list |
+| `wiz_source_create_app` | Create standard app (page, component, layout) |
+| `wiz_source_create_route` | Create route (API endpoint) |
+| `wiz_source_update_app` | Update app.json configuration |
+| `wiz_source_delete_app` | Delete an app/route folder |
+| `wiz_source_list_files` | List files within an app folder |
+| `wiz_source_read_file` | Read a file within an app folder |
+| `wiz_source_write_file` | Write a file within an app folder |
+| `wiz_source_delete_file` | Delete a file within an app folder |
+| `wiz_source_rename_file` | Rename a file within an app folder |
+| `wiz_source_list_controllers` | List Python controllers |
+| `wiz_source_list_layouts` | List layout apps |
 
-#### 🧩 App Management (9)
+#### 📦 Package (15)
 | Tool | Description |
 |------|-------------|
-| `wiz_list_apps` | List apps with filter (page, component, layout, route, all) |
-| `wiz_get_app_info` | Get detailed app info and file list |
-| `wiz_create_app` | Create new standard app (page, component, layout) |
-| `wiz_create_route` | Create new route (API endpoint) |
-| `wiz_create_portal_app` | Create portal app in package |
-| `wiz_create_portal_route` | Create portal route in package |
-| `wiz_update_app` | Update app.json configuration |
-| `wiz_delete_app` | Delete an app/route |
-| `wiz_search_apps` | Search apps by keyword |
+| `wiz_package_list` | List portal packages |
+| `wiz_package_create` | Create new package |
+| `wiz_package_export` | Export package as `.wizpkg` archive |
+| `wiz_package_list_apps` | List apps/routes within a package |
+| `wiz_package_app_info` | Get portal app details and file list |
+| `wiz_package_create_app` | Create portal app in package |
+| `wiz_package_create_route` | Create portal route in package |
+| `wiz_package_update_app` | Update portal app.json |
+| `wiz_package_delete_app` | Delete portal app/route |
+| `wiz_package_list_files` | List files within a portal app folder |
+| `wiz_package_read_file` | Read a file within a portal app folder |
+| `wiz_package_write_file` | Write a file within a portal app folder |
+| `wiz_package_delete_file` | Delete a file within a portal app folder |
+| `wiz_package_list_controllers` | List controllers in a package |
 
-#### 📦 Package Management (3)
-| Tool | Description |
-|------|-------------|
-| `wiz_list_packages` | List Portal packages |
-| `wiz_create_package` | Create new package via wiz CLI |
-| `wiz_export_package` | Export package as `.wizpkg` archive |
-
-#### 🐍 Dependency Management (6)
-| Tool | Description |
-|------|-------------|
-| `wiz_pip_list` | List installed pip packages (with outdated check) |
-| `wiz_pip_install` | Install pip package(s) (with version specifier) |
-| `wiz_pip_uninstall` | Uninstall pip package(s) |
-| `wiz_npm_list` | List installed npm packages |
-| `wiz_npm_install` | Install npm package(s) (with dev/global flags) |
-| `wiz_npm_uninstall` | Uninstall npm package(s) |
-
-#### 📂 File System (7)
-| Tool | Description |
-|------|-------------|
-| `wiz_get_project_structure` | Get directory tree structure (with depth control) |
-| `wiz_list_directory` | List directory contents |
-| `wiz_read_file` | Read any file (with line range support) |
-| `wiz_write_file` | Write/create any file |
-| `wiz_create_folder` | Create directory (recursive) |
-| `wiz_delete_file` | Delete file/directory |
-| `wiz_rename_file` | Rename/move file |
-
-#### ⚡ App File Shortcuts & Helpers (4)
-| Tool | Description |
-|------|-------------|
-| `wiz_read_app_file` | Read app file by name (view.html, view.ts, etc.) |
-| `wiz_write_app_file` | Write app file by name |
-| `wiz_list_controllers` | List Python controllers |
-| `wiz_list_layouts` | List layout apps |
-
-> **Note**: `workspacePath` and `projectName` are **automatically injected** from the Explorer state. Relative paths (e.g., `portal/dizest/app/drive`) are auto-resolved to the project's `src/` directory.
+> **Note**: `projectName` is **auto-detected** from Explorer state. All path parameters support relative paths that are auto-resolved to the appropriate root.
 
 ### ⌨️ Command Palette Integration
 Quick access to all major features via `Ctrl+Shift+P`:

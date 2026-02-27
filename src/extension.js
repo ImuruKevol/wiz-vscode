@@ -361,6 +361,12 @@ function activate(context) {
                 ].join('\n');
 
                 try {
+                    const confirm = await vscode.window.showWarningMessage(
+                        'Copilot Chat으로 DevOps 가이드 생성을 요청하시겠습니까?',
+                        { modal: true }, '보내기'
+                    );
+                    if (confirm !== '보내기') return;
+
                     await vscode.commands.executeCommand('workbench.action.chat.open', {
                         query: prompt,
                         mode: 'agent'
@@ -373,6 +379,12 @@ function activate(context) {
                 }
             } else if (selected.action === 'architecture') {
                 try {
+                    const confirm = await vscode.window.showWarningMessage(
+                        'Copilot Chat으로 아키텍처 분석을 요청하시겠습니까?',
+                        { modal: true }, '보내기'
+                    );
+                    if (confirm !== '보내기') return;
+
                     await vscode.commands.executeCommand('workbench.action.chat.open', {
                         query: '현재 프로젝트에 대해서 분석해서 custom 인스트럭션에 이 시스템을 고도화/유지보수하기 위한 가이드라인 및 참고할만한 시스템/서비스 아키텍처 문서들을 정리해줘. 커스텀 인스트럭션에는 간략한 수준으로 해야할 일에 따른 네비게이션 역할을 하는 내용만 작성해주고, 상세 문서는 별도로 만들어줘.',
                         mode: 'agent'
@@ -413,6 +425,12 @@ function activate(context) {
                 vscode.window.showErrorMessage('워크스페이스가 열려있지 않습니다.');
                 return;
             }
+            const confirm = await vscode.window.showWarningMessage(
+                'Copilot Chat으로 작업 실행을 요청하시겠습니까?',
+                { modal: true }, '실행'
+            );
+            if (confirm !== '실행') return;
+
             const todoPath = path.join(workspaceRoot, '.github', 'task', 'todo.md');
             try {
                 await vscode.commands.executeCommand('workbench.action.chat.open', {
@@ -464,6 +482,12 @@ function activate(context) {
                     break;
                 }
                 case 'run': {
+                    const confirm = await vscode.window.showWarningMessage(
+                        'Copilot Chat으로 작업 실행을 요청하시겠습니까?',
+                        { modal: true }, '실행'
+                    );
+                    if (confirm !== '실행') break;
+
                     const todoPath = path.join(workspaceRoot, '.github', 'task', 'todo.md');
                     try {
                         await vscode.commands.executeCommand('workbench.action.chat.open', {

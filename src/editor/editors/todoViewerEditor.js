@@ -160,6 +160,14 @@ class TodoViewerEditor extends EditorBase {
     }
 
     async handleRunTask(selectedIds = []) {
+        const confirmMsg = selectedIds.length > 0
+            ? `선택한 작업(${selectedIds.join(', ')})을 Copilot Chat으로 실행하시겠습니까?`
+            : 'Copilot Chat으로 작업 실행을 요청하시겠습니까?';
+        const confirm = await vscode.window.showWarningMessage(
+            confirmMsg, { modal: true }, '실행'
+        );
+        if (confirm !== '실행') return;
+
         try {
             const query = selectedIds.length > 0
                 ? `${selectedIds.join(', ')} 작업 수행해줘`
@@ -179,6 +187,12 @@ class TodoViewerEditor extends EditorBase {
     }
 
     async handleReviewWizard() {
+        const confirm = await vscode.window.showWarningMessage(
+            'Copilot Chat으로 리뷰 정리를 요청하시겠습니까?',
+            { modal: true }, '실행'
+        );
+        if (confirm !== '실행') return;
+
         try {
             await vscode.commands.executeCommand('workbench.action.chat.open', {
                 query: '리뷰 정리해줘',

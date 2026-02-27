@@ -410,12 +410,47 @@ class RichEditor {
             if (html) {
                 e.preventDefault();
                 const cleaned = this._sanitizePastedHtml(html);
-                document.execCommand('insertHTML', false, cleaned);
+                this._insertHtmlAtCursor(cleaned);
                 this._fireInput();
                 return;
             }
-            // Plain text paste: let default behavior handle
+
+            // Plain text paste: sanitize and insert
+            const text = e.clipboardData?.getData('text/plain');
+            if (text) {
+                e.preventDefault();
+                const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const htmlText = escaped.replace(/\n/g, '<br>');
+                this._insertHtmlAtCursor(htmlText);
+                this._fireInput();
+                return;
+            }
         });
+    }
+
+    _insertHtmlAtCursor(html) {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        let lastNode;
+        while (temp.firstChild) {
+            lastNode = frag.appendChild(temp.firstChild);
+        }
+        range.insertNode(frag);
+
+        if (lastNode) {
+            const newRange = document.createRange();
+            newRange.setStartAfter(lastNode);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
     }
 
     _sanitizePastedHtml(html) {

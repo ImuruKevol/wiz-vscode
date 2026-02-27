@@ -52,6 +52,12 @@ class TodoEditor extends EditorBase {
             return;
         }
 
+        const confirm = await vscode.window.showWarningMessage(
+            'Copilot Chat으로 TODO 생성 요청을 보내시겠습니까?',
+            { modal: true }, '보내기'
+        );
+        if (confirm !== '보내기') return;
+
         const query = `아래 내용을 분석해서 TODO 작성해줘.\n\n${markdown}`;
         try {
             await vscode.commands.executeCommand('workbench.action.chat.open', { query, mode: 'agent' });
