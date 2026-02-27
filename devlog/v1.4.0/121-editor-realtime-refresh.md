@@ -1,4 +1,4 @@
-# 121. 에디터 파일 동기화 — 실시간 새로고침 및 마크다운 뷰어 적용 (v1.3.3)
+# 121. 에디터 파일 동기화 — 실시간 새로고침 및 마크다운 뷰어 적용 (v1.4.0)
 
 ## 개요
 `vscode.workspace.createFileSystemWatcher`가 `.github/task/` 경로의 파일 변경을 감지하지 못해 탭 전환 시에만 갱신되던 문제를 Node.js `fs.watch()` API로 교체하여 실시간 새로고침이 동작하도록 수정. MarkdownViewerEditor에도 동일 패턴 적용.

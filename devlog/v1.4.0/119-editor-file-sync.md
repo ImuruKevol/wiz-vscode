@@ -1,4 +1,4 @@
-# 119. 에디터 외부 파일 변경 자동 동기화 (v1.3.3)
+# 119. 에디터 외부 파일 변경 자동 동기화 (v1.4.0)
 
 ## 개요
 TodoViewerEditor, MemoViewerEditor, WorkedReviewEditor에서 열린 파일이 외부에서 변경될 때 Webview가 자동으로 최신화되지 않는 문제를 해결하고, 무한루프 방지 전략을 적용.

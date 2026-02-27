@@ -9,22 +9,27 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
+### v1.4.0 (Editor Sync, MCP Restructuring & Non-WIZ Support)
+
+- [134](./devlog/v1.4.0/134-non-wiz-recognition-fix.md) - 비-WIZ 프로젝트 인식 로직 재점검 (기본값 false, 조건 강화, 초기 컨텍스트)
+- [133](./devlog/v1.4.0/133-non-wiz-view-improvement.md) - 비-WIZ 프로젝트 뷰 개선 (Info 뷰 README+version, Explorer 메시지 개선)
+- [132](./devlog/v1.4.0/132-task-instruction-improvement.md) - 작업 관리 인스트럭션 적용 기능 개선 (프롬프트 상세화, 즉시 정리 원칙 등)
+- [131](./devlog/v1.4.0/131-mcp-modular-restructure.md) - MCP 소스코드 디렉토리 구조 리팩토링 (1673줄 → 7개 모듈, 프로토타입 믹스인 패턴)
+- [130](./devlog/v1.4.0/130-mcp-state-sync.md) - MCP 프로젝트 스위칭 UI 동기화 (FileSystemWatcher 기반 상태 파일 감시)
+- [129](./devlog/v1.4.0/129-non-wiz-project-support.md) - 비-WIZ 프로젝트 기능 지원 (작업관리/인스트럭션 뷰 유지, WIZ 전용 항목 조건부 숨김)
+- [128](./devlog/v1.4.0/128-view-refresh-buttons.md) - 뷰 액션 새로고침 버튼 추가 (wizExplorer, wizTask, wizInstruction)
+- [127](./devlog/v1.4.0/127-copilot-confirm-dialog.md) - Copilot Chat 메시지 전송 확인창 추가 (6개소 모달 확인 대화상자)
+- [126](./devlog/v1.4.0/126-mcp-restructuring.md) - MCP 구조 리팩토링 — 4개 카테고리 체계 전환 (8→4 카테고리, 36→54 도구)
+- [125](./devlog/v1.4.0/125-rich-editor-paste-fix.md) - RichEditor 복사 붙여넣기 수정 (Selection/Range API 전환)
+- [124](./devlog/v1.4.0/124-rich-editor-improvements.md) - Rich Editor 개선 (목록 depth, 소스코드 보기, 붙여넣기 서식 정리)
+- [123](./devlog/v1.4.0/123-todo-selection-feature.md) - TODO 목록 선택 시작 기능 (체크박스, 해시태그 바, 선택 실행)
+- [122](./devlog/v1.4.0/122-editor-sync-vscode-events.md) - 에디터 파일 동기화 — VS Code 이벤트 기반 재구현
+- [121](./devlog/v1.4.0/121-editor-realtime-refresh.md) - 에디터 실시간 새로고침 (fs.watch 전환, 마크다운 뷰어 적용)
+- [120](./devlog/v1.4.0/120-editor-file-sync-refresh-fix.md) - 에디터 파일 동기화 새로고침 동작 수정 (디바운스, onDidCreate, 가시성 갱신)
+- [119](./devlog/v1.4.0/119-editor-file-sync.md) - 에디터 외부 파일 변경 자동 동기화 (무한루프 방지 전략 적용)
+
 ### v1.3.3 (Memo Feature & Copilot Chat Agent Mode)
 
-- [132](./devlog/v1.3.3/132-task-instruction-improvement.md) - 작업 관리 인스트럭션 적용 기능 개선 (프롬프트 상세화, 즉시 정리 원칙 등)
-- [131](./devlog/v1.3.3/131-mcp-modular-restructure.md) - MCP 소스코드 디렉토리 구조 리팩토링 (1673줄 → 7개 모듈, 프로토타입 믹스인 패턴)
-- [130](./devlog/v1.3.3/130-mcp-state-sync.md) - MCP 프로젝트 스위칭 UI 동기화 (FileSystemWatcher 기반 상태 파일 감시)
-- [129](./devlog/v1.3.3/129-non-wiz-project-support.md) - 비-WIZ 프로젝트 기능 지원 (작업관리/인스트럭션 뷰 유지, WIZ 전용 항목 조건부 숨김)
-- [128](./devlog/v1.3.3/128-view-refresh-buttons.md) - 뷰 액션 새로고침 버튼 추가 (wizExplorer, wizTask, wizInstruction)
-- [127](./devlog/v1.3.3/127-copilot-confirm-dialog.md) - Copilot Chat 메시지 전송 확인창 추가 (6개소 모달 확인 대화상자)
-- [126](./devlog/v1.3.3/126-mcp-restructuring.md) - MCP 구조 리팩토링 — 4개 카테고리 체계 전환 (8→4 카테고리, 36→54 도구)
-- [125](./devlog/v1.3.3/125-rich-editor-paste-fix.md) - RichEditor 복사 붙여넣기 수정 (Selection/Range API 전환)
-- [124](./devlog/v1.3.3/124-rich-editor-improvements.md) - Rich Editor 개선 (목록 depth, 소스코드 보기, 붙여넣기 서식 정리)
-- [123](./devlog/v1.3.3/123-todo-selection-feature.md) - TODO 목록 선택 시작 기능 (체크박스, 해시태그 바, 선택 실행)
-- [122](./devlog/v1.3.3/122-editor-sync-vscode-events.md) - 에디터 파일 동기화 — VS Code 이벤트 기반 재구현
-- [121](./devlog/v1.3.3/121-editor-realtime-refresh.md) - 에디터 실시간 새로고침 (fs.watch 전환, 마크다운 뷰어 적용)
-- [120](./devlog/v1.3.3/120-editor-file-sync-refresh-fix.md) - 에디터 파일 동기화 새로고침 동작 수정 (디바운스, onDidCreate, 가시성 갱신)
-- [119](./devlog/v1.3.3/119-editor-file-sync.md) - 에디터 외부 파일 변경 자동 동기화 (무한루프 방지 전략 적용)
 - [118](./devlog/v1.3.3/118-copilot-chat-agent-mode.md) - Copilot Chat Agent 모드 및 attachFiles API 적용
 - [117](./devlog/v1.3.3/117-memo-todo-apply-fix.md) - 메모 TODO 반영 동작 수정 및 작업관리 메뉴 상태 유지
 - [116](./devlog/v1.3.3/116-memo-edit-button-and-worked-count.md) - 메모 기본 편집기 버튼 추가 및 검토필요 파일 개수 표시

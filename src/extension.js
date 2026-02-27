@@ -263,6 +263,9 @@ function activate(context) {
     );
 
     // ==================== Tree View ====================
+    // 트리 뷰 생성 전에 초기 컨텍스트 설정 (기본 비-WIZ 상태)
+    vscode.commands.executeCommand('setContext', 'wiz.isWizProject', false);
+
     const WizDragAndDropController = require('./explorer/wizDragAndDropController');
     const dragAndDropController = new WizDragAndDropController(fileExplorerProvider);
     

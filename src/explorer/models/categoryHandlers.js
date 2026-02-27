@@ -205,18 +205,52 @@ class SettingsCategory extends CategoryItem {
         const items = [];
         const version = this.provider.extensionVersion || 'unknown';
         const projectName = this.provider.currentProjectName || 'main';
-        const isWiz = this.provider.isWizProject !== false;
+        const isWiz = this.provider.isWizProject === true;
 
-        // 비-WIZ 프로젝트: 최소 정보만 표시
+        // 비-WIZ 프로젝트: README + version만 표시
         if (!isWiz) {
-            const notWizItem = new vscode.TreeItem('WIZ 프로젝트가 아닙니다', vscode.TreeItemCollapsibleState.None);
-            notWizItem.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('disabledForeground'));
-            notWizItem.contextValue = 'settingsItem';
-            items.push(notWizItem);
+            // README (워크스페이스 루트 기준)
+            const readmePath = this.provider.workspaceRoot
+                ? path.join(this.provider.workspaceRoot, 'README.md')
+                : null;
+            const readmeExists = readmePath && fs.existsSync(readmePath);
+            const readmeItem = new vscode.TreeItem('README', vscode.TreeItemCollapsibleState.None);
+            readmeItem.iconPath = new vscode.ThemeIcon(readmeExists ? 'book' : 'book');
+            if (readmeExists) {
+                readmeItem.command = {
+                    command: 'wizExplorer.openFile',
+                    title: 'Open README',
+                    arguments: [{ resourceUri: vscode.Uri.file(readmePath) }]
+                };
+            } else {
+                readmeItem.description = '(생성)';
+                readmeItem.iconPath = new vscode.ThemeIcon('book', new vscode.ThemeColor('disabledForeground'));
+                readmeItem.command = {
+                    command: 'wizExplorer.createReadme',
+                    title: 'Create README'
+                };
+            }
+            readmeItem.contextValue = 'settingsItem';
+            items.push(readmeItem);
 
             // 버전 정보
-            const versionItem = new vscode.TreeItem(`version: v${version}`, vscode.TreeItemCollapsibleState.None);
-            versionItem.iconPath = new vscode.ThemeIcon('info');
+            const latestVersion = this.provider.latestVersion;
+            const hasUpdate = latestVersion && this._compareVersions(latestVersion, version) > 0;
+            const versionLabel = hasUpdate
+                ? `version: v${version} → v${latestVersion}`
+                : `version: v${version}`;
+            const versionItem = new vscode.TreeItem(versionLabel, vscode.TreeItemCollapsibleState.None);
+            versionItem.iconPath = new vscode.ThemeIcon(hasUpdate ? 'cloud-download' : 'info');
+            versionItem.tooltip = hasUpdate
+                ? `새 버전 v${latestVersion} 사용 가능 (현재 v${version}). 클릭하여 업데이트`
+                : `Wiz VSCode Extension v${version} (최신)`;
+            if (hasUpdate) {
+                versionItem.description = '⬆ update';
+                versionItem.command = {
+                    command: 'wizExplorer.updateExtension',
+                    title: 'Update Extension'
+                };
+            }
             versionItem.contextValue = 'settingsItem';
             items.push(versionItem);
 

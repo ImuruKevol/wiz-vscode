@@ -22,8 +22,8 @@ class FileExplorerProvider {
         this.mcpServerRunning = false;
         /** @type {string|null} 최신 버전 (null이면 확인 안됨) */
         this.latestVersion = null;
-        /** @type {boolean} WIZ 프로젝트 여부 */
-        this.isWizProject = true;
+        /** @type {boolean} WIZ 프로젝트 여부 (기본 false — updateProjectRoot에서 판별 후 설정) */
+        this.isWizProject = false;
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         /** @private 디바운스된 refresh 타이머 */
@@ -155,15 +155,19 @@ class FileExplorerProvider {
 
         if (!element) {
             if (!fs.existsSync(this.workspaceRoot)) {
-                return [
-                    new EmptyItem(`폴더를 찾을 수 없음: ${path.basename(this.workspaceRoot)}`, 'noFolder'),
-                    new EmptyItem('다른 프로젝트 선택...', 'switchProject')
+                const items = [
+                    new EmptyItem(`폴더를 찾을 수 없음: ${path.basename(this.workspaceRoot)}`, 'noFolder')
                 ];
+                // WIZ 프로젝트에서만 '다른 프로젝트 선택' 표시
+                if (this.isWizProject) {
+                    items.push(new EmptyItem('다른 프로젝트 선택...', 'switchProject'));
+                }
+                return items;
             }
             // 비-WIZ 프로젝트: 탐색기에 안내 메시지 표시
             if (!this.isWizProject) {
                 return [
-                    new EmptyItem('WIZ 프로젝트가 아닙니다', 'notWizProject')
+                    new EmptyItem('WIZ 구조의 프로젝트가 아닙니다', 'notWizProject')
                 ];
             }
             return this.categories;

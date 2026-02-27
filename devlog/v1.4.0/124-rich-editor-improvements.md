@@ -1,4 +1,4 @@
-# 124. Rich Editor 개선 (v1.3.3)
+# 124. Rich Editor 개선 (v1.4.0)
 
 ## 개요
 RichEditor 컴포넌트에 목록 depth 조절, 소스코드 보기, 붙여넣기 서식 정리 기능 추가.

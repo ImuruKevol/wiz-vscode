@@ -1,4 +1,4 @@
-# 122. 에디터 파일 동기화 — VS Code 이벤트 기반 재구현 (v1.3.3)
+# 122. 에디터 파일 동기화 — VS Code 이벤트 기반 재구현 (v1.4.0)
 
 ## 개요
 `fs.watch()`도 `.github/task/` 경로에서 이벤트가 발생하지 않는 문제가 확인되어, VS Code 텍스트 문서 이벤트(`onDidChangeTextDocument`, `onDidSaveTextDocument`) 기반으로 전면 재구현. VS Code 에디터에서 파일 편집 시 저장 전에도 실시간으로 Webview에 반영됨.
