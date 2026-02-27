@@ -364,6 +364,165 @@ const manager = new FileManager({
 
 ---
 
+## 에디터 파일 동기화 가이드라인
+
+Webview 에디터에서 파일의 외부 변경을 감지하여 자동 갱신할 때, **무한루프 방지**를 반드시 적용해야 합니다.
+
+### 문제 시나리오
+
+```
+에디터 저장(handleSave) → fs.writeFileSync → VS Code가 디스크 변경 감지
+→ onDidChangeTextDocument 트리거 → webview 갱신 → (만약 갱신 시 자동 저장하면)
+→ 다시 handleSave → 무한루프
+```
+
+### 필수 구현 패턴
+
+#### 1. `_isSaving` 플래그로 자기 저장 이벤트 필터링
+
+```javascript
+// 생성자에서 초기화
+constructor(context, filePath) {
+    super(context);
+    this.filePath = filePath;
+    this._disposables = [];          // VS Code 이벤트 구독 정리용
+    this._refreshDebounceTimer = null;
+    this._isSaving = false;          // 필수
+}
+
+// handleSave에서 플래그 설정
+async handleSave(markdown) {
+    try {
+        this._isSaving = true;  // 저장 시작 전 플래그 ON
+        fs.writeFileSync(this.filePath, markdown, 'utf8');
+        // ... postMessage 등 후처리
+        setTimeout(() => { this._isSaving = false; }, 500);  // 지연 해제 (이벤트와의 경합 방지)
+    } catch (e) {
+        this._isSaving = false;  // 에러 시에도 반드시 해제
+        // ... 에러 처리
+    }
+}
+```
+
+#### 2. VS Code 이벤트 기반 파일 동기화
+
+> **참고**: `vscode.workspace.createFileSystemWatcher`와 Node.js `fs.watch()`는 특정 환경에서
+> 이벤트가 발생하지 않는 문제가 확인되었습니다. VS Code 텍스트 문서 이벤트를 사용하면
+> VS Code 에디터에서 편집 시 저장 전에도 실시간으로 변경을 감지할 수 있습니다.
+
+```javascript
+// 단일 파일 감시
+this._disposables.push(
+    // 편집 중(미저장) 변경 감지 — 실시간 동기화
+    vscode.workspace.onDidChangeTextDocument((e) => {
+        if (this._isSaving) return;                          // 자기 저장이면 무시
+        if (e.document.uri.scheme !== 'file') return;        // 파일 스킴만 처리
+        if (e.document.uri.fsPath !== this.filePath) return; // 대상 파일만 필터링
+        if (e.contentChanges.length === 0) return;           // 메타데이터 변경 무시
+        if (this._refreshDebounceTimer) clearTimeout(this._refreshDebounceTimer);
+        this._refreshDebounceTimer = setTimeout(() => {
+            this.postMessage({ command: 'refreshContent', content: e.document.getText() });
+        }, 300);
+    }),
+    // 저장 시 확정 갱신
+    vscode.workspace.onDidSaveTextDocument((doc) => {
+        if (this._isSaving) return;
+        if (doc.uri.fsPath !== this.filePath) return;
+        const content = this.loadContent();
+        this.postMessage({ command: 'refreshContent', content });
+    })
+);
+
+// 패널 가시성 변경 시 최신화 (탭 전환 복귀 시 fallback)
+this.panel.onDidChangeViewState(() => {
+    if (this.panel && this.panel.visible && !this._isSaving) {
+        const content = this.loadContent();
+        this.postMessage({ command: 'refreshContent', content });
+    }
+});
+```
+
+#### 3. 콘텐츠 로드 시 문서 버퍼 우선 사용
+
+```javascript
+loadContent() {
+    try {
+        // VS Code에서 열린 문서가 있으면 버퍼 내용 우선 사용 (미저장 변경 포함)
+        const openDoc = vscode.workspace.textDocuments.find(
+            doc => doc.uri.fsPath === this.filePath
+        );
+        if (openDoc) return openDoc.getText();
+        if (fs.existsSync(this.filePath)) {
+            return fs.readFileSync(this.filePath, 'utf8');
+        }
+    } catch (e) { /* ignore */ }
+    return '';
+}
+```
+
+#### 4. 디렉토리 감시 (WorkedReviewEditor 등)
+
+```javascript
+// 디렉토리 내 .md 파일 변경 + 생성/삭제 이벤트도 구독
+this._disposables.push(
+    vscode.workspace.onDidChangeTextDocument((e) => {
+        if (this._isSaving) return;
+        if (e.document.uri.scheme !== 'file') return;
+        if (e.contentChanges.length === 0) return;
+        const docDir = path.dirname(e.document.uri.fsPath);
+        if (docDir !== this.dirPath || !e.document.uri.fsPath.endsWith('.md')) return;
+        debouncedRefresh();
+    }),
+    vscode.workspace.onDidCreateFiles((e) => { /* 새 파일 감지 */ }),
+    vscode.workspace.onDidDeleteFiles((e) => { /* 삭제된 파일 감지 */ })
+);
+```
+
+#### 5. Webview 측에서 refresh 수신 시 save 미트리거
+
+```javascript
+// Webview 메시지 핸들러
+if (msg.command === 'refreshContent') {
+    pages = parseContent(msg.content);  // 내부 상태만 갱신
+    render();                           // UI만 갱신
+    // ❌ vscode.postMessage({ command: 'save', ... }) 호출 금지!
+}
+```
+
+#### 6. onDispose에서 구독 정리
+
+```javascript
+onDispose() {
+    this._disposables.forEach(d => d.dispose());  // VS Code 이벤트 구독 해제
+    this._disposables = [];
+    if (this._refreshDebounceTimer) {
+        clearTimeout(this._refreshDebounceTimer);
+        this._refreshDebounceTimer = null;
+    }
+}
+```
+
+### 핵심 원칙
+
+| 원칙 | 설명 |
+|------|------|
+| **VS Code 이벤트 사용** | `onDidChangeTextDocument`(실시간) + `onDidSaveTextDocument`(저장 시) 조합 |
+| **문서 버퍼 우선** | `vscode.workspace.textDocuments`에서 열린 문서 검색 → `getText()`로 미저장 내용 반영 |
+| **자기 저장 필터링** | `_isSaving` 플래그로 자신이 쓴 파일 변경 이벤트 무시 |
+| **디바운스 (300ms)** | `onDidChangeTextDocument`는 키 입력마다 발생하므로 300ms 디바운스 필수 |
+| **가시성 fallback** | `panel.onDidChangeViewState`로 탭 전환 시 최신화 (파일이 VS Code에 열려있지 않을 때 보완) |
+| **refresh ≠ save** | 외부 변경으로 인한 webview 갱신은 읽기 전용 갱신만 수행하고 save를 트리거하지 않음 |
+| **리소스 정리** | 에디터 닫힐 때 반드시 `_disposables.forEach(d => d.dispose())` + 타이머 정리 |
+
+### 적용 대상 에디터 목록
+
+- `MarkdownViewerEditor` — 읽기 전용, VS Code 이벤트 + 디바운스 + 가시성 갱신
+- `TodoViewerEditor` — 단일 파일 감시 + `_isSaving` 적용
+- `MemoViewerEditor` — 단일 파일 감시 + `_isSaving` 적용
+- `WorkedReviewEditor` — 디렉토리 감시 (문서 변경 + 파일 생성/삭제) + `_isSaving` 적용
+
+---
+
 ## 체크리스트
 
 새 기능 PR 전 확인:
@@ -375,3 +534,4 @@ const manager = new FileManager({
 - [ ] core 모듈에 상태가 없는가?
 - [ ] index.js에 export 추가했는가?
 - [ ] 관련 기능이 동일 폴더에 있는가? (예: build는 project에)
+- [ ] 파일 변경 감시가 있는 에디터에 `_isSaving` 무한루프 방지가 적용되었는가?

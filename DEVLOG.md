@@ -11,6 +11,10 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.3 (Memo Feature & Copilot Chat Agent Mode)
 
+- [122](./devlog/v1.3.3/122-editor-sync-vscode-events.md) - 에디터 파일 동기화 — VS Code 이벤트 기반 재구현
+- [121](./devlog/v1.3.3/121-editor-realtime-refresh.md) - 에디터 실시간 새로고침 (fs.watch 전환, 마크다운 뷰어 적용)
+- [120](./devlog/v1.3.3/120-editor-file-sync-refresh-fix.md) - 에디터 파일 동기화 새로고침 동작 수정 (디바운스, onDidCreate, 가시성 갱신)
+- [119](./devlog/v1.3.3/119-editor-file-sync.md) - 에디터 외부 파일 변경 자동 동기화 (무한루프 방지 전략 적용)
 - [118](./devlog/v1.3.3/118-copilot-chat-agent-mode.md) - Copilot Chat Agent 모드 및 attachFiles API 적용
 - [117](./devlog/v1.3.3/117-memo-todo-apply-fix.md) - 메모 TODO 반영 동작 수정 및 작업관리 메뉴 상태 유지
 - [116](./devlog/v1.3.3/116-memo-edit-button-and-worked-count.md) - 메모 기본 편집기 버튼 추가 및 검토필요 파일 개수 표시

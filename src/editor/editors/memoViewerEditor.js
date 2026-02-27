@@ -16,6 +16,9 @@ class MemoViewerEditor extends EditorBase {
     constructor(context, memoFilePath) {
         super(context);
         this.memoFilePath = memoFilePath;
+        this._disposables = [];
+        this._isSaving = false;
+        this._refreshDebounceTimer = null;
     }
 
     static async openOrCreate(context, memoFilePath) {
@@ -30,6 +33,12 @@ class MemoViewerEditor extends EditorBase {
 
     onDispose() {
         MemoViewerEditor._instance = null;
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        if (this._refreshDebounceTimer) {
+            clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = null;
+        }
     }
 
     async open() {
@@ -66,10 +75,43 @@ class MemoViewerEditor extends EditorBase {
                     break;
             }
         });
+
+        // VS Code 이벤트 기반 파일 동기화 — 편집 중(미저장) 변경 및 저장 시 자동 갱신
+        this._disposables.push(
+            vscode.workspace.onDidChangeTextDocument((e) => {
+                if (this._isSaving) return;
+                if (e.document.uri.scheme !== 'file') return;
+                if (e.document.uri.fsPath !== this.memoFilePath) return;
+                if (e.contentChanges.length === 0) return;
+                if (this._refreshDebounceTimer) clearTimeout(this._refreshDebounceTimer);
+                this._refreshDebounceTimer = setTimeout(() => {
+                    this.postMessage({ command: 'refreshContent', content: e.document.getText() });
+                }, 300);
+            }),
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                if (this._isSaving) return;
+                if (doc.uri.fsPath !== this.memoFilePath) return;
+                const content = this.loadMemoContent();
+                this.postMessage({ command: 'refreshContent', content });
+            })
+        );
+
+        // 패널 가시성 변경 시 최신화 (탭 전환 복귀 시)
+        this.panel.onDidChangeViewState(() => {
+            if (this.panel && this.panel.visible && !this._isSaving) {
+                const content = this.loadMemoContent();
+                this.postMessage({ command: 'refreshContent', content });
+            }
+        });
     }
 
     loadMemoContent() {
         try {
+            // VS Code에서 열린 문서가 있으면 버퍼 내용 우선 사용 (미저장 변경 포함)
+            const openDoc = vscode.workspace.textDocuments.find(
+                doc => doc.uri.fsPath === this.memoFilePath
+            );
+            if (openDoc) return openDoc.getText();
             if (fs.existsSync(this.memoFilePath)) {
                 return fs.readFileSync(this.memoFilePath, 'utf8');
             }
@@ -79,6 +121,7 @@ class MemoViewerEditor extends EditorBase {
 
     async handleSave(markdown) {
         try {
+            this._isSaving = true;
             const dir = path.dirname(this.memoFilePath);
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
@@ -86,7 +129,9 @@ class MemoViewerEditor extends EditorBase {
             fs.writeFileSync(this.memoFilePath, markdown, 'utf8');
             this.postMessage({ command: 'saveComplete' });
             vscode.window.showInformationMessage('memo.md 저장 완료');
+            setTimeout(() => { this._isSaving = false; }, 500);
         } catch (e) {
+            this._isSaving = false;
             vscode.window.showErrorMessage(`저장 실패: ${e.message}`);
         }
     }
@@ -737,6 +782,12 @@ class MemoViewerEditor extends EditorBase {
                 if (currentPage >= pages.length && currentPage > 0) currentPage--;
                 const md = pagesToMarkdown(pages);
                 vscode.postMessage({ command: 'save', markdown: md });
+                render();
+                saveViewState();
+            }
+            if (msg.command === 'refreshContent') {
+                pages = parseMemoContent(msg.content);
+                if (currentPage >= pages.length) currentPage = Math.max(0, pages.length - 1);
                 render();
                 saveViewState();
             }

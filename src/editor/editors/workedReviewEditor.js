@@ -15,6 +15,9 @@ class WorkedReviewEditor extends EditorBase {
     constructor(context, workedDirPath) {
         super(context);
         this.workedDirPath = workedDirPath;
+        this._disposables = [];
+        this._isSaving = false;
+        this._refreshDebounceTimer = null;
     }
 
     static async openOrCreate(context, workedDirPath) {
@@ -29,6 +32,12 @@ class WorkedReviewEditor extends EditorBase {
 
     onDispose() {
         WorkedReviewEditor._instance = null;
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        if (this._refreshDebounceTimer) {
+            clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = null;
+        }
     }
 
     async open() {
@@ -57,6 +66,52 @@ class WorkedReviewEditor extends EditorBase {
                 }
             }
         });
+
+        // VS Code 이벤트 기반 파일 동기화 — 편집 중(미저장) 변경 및 저장 시 자동 갱신
+        const debouncedRefresh = () => {
+            if (this._isSaving) return;
+            if (this._refreshDebounceTimer) clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = setTimeout(() => {
+                const files = this.loadWorkedFiles();
+                this.postMessage({ command: 'refreshFiles', files });
+            }, 300);
+        };
+        this._disposables.push(
+            vscode.workspace.onDidChangeTextDocument((e) => {
+                if (this._isSaving) return;
+                if (e.document.uri.scheme !== 'file') return;
+                if (e.contentChanges.length === 0) return;
+                const docDir = path.dirname(e.document.uri.fsPath);
+                if (docDir !== this.workedDirPath || !e.document.uri.fsPath.endsWith('.md')) return;
+                debouncedRefresh();
+            }),
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                if (this._isSaving) return;
+                const docDir = path.dirname(doc.uri.fsPath);
+                if (docDir !== this.workedDirPath || !doc.uri.fsPath.endsWith('.md')) return;
+                debouncedRefresh();
+            }),
+            vscode.workspace.onDidCreateFiles((e) => {
+                const hasRelevant = e.files.some(uri => {
+                    return path.dirname(uri.fsPath) === this.workedDirPath && uri.fsPath.endsWith('.md');
+                });
+                if (hasRelevant) debouncedRefresh();
+            }),
+            vscode.workspace.onDidDeleteFiles((e) => {
+                const hasRelevant = e.files.some(uri => {
+                    return path.dirname(uri.fsPath) === this.workedDirPath && uri.fsPath.endsWith('.md');
+                });
+                if (hasRelevant) debouncedRefresh();
+            })
+        );
+
+        // 패널 가시성 변경 시 최신화 (탭 전환 복귀 시)
+        this.panel.onDidChangeViewState(() => {
+            if (this.panel && this.panel.visible && !this._isSaving) {
+                const files = this.loadWorkedFiles();
+                this.postMessage({ command: 'refreshFiles', files });
+            }
+        });
     }
 
     /**
@@ -72,7 +127,11 @@ class WorkedReviewEditor extends EditorBase {
 
         for (const fileName of entries) {
             const filePath = path.join(this.workedDirPath, fileName);
-            const content = fs.readFileSync(filePath, 'utf8');
+            // VS Code에서 열린 문서가 있으면 버퍼 내용 우선 사용 (미저장 변경 포함)
+            const openDoc = vscode.workspace.textDocuments.find(
+                doc => doc.uri.fsPath === filePath
+            );
+            const content = openDoc ? openDoc.getText() : fs.readFileSync(filePath, 'utf8');
             files.push({ fileName, content });
         }
         return files;
@@ -80,10 +139,13 @@ class WorkedReviewEditor extends EditorBase {
 
     async handleSave(fileName, content) {
         try {
+            this._isSaving = true;
             const filePath = path.join(this.workedDirPath, fileName);
             fs.writeFileSync(filePath, content, 'utf8');
             this.postMessage({ command: 'saveComplete' });
+            setTimeout(() => { this._isSaving = false; }, 500);
         } catch (e) {
+            this._isSaving = false;
             vscode.window.showErrorMessage(`저장 실패: ${e.message}`);
         }
     }
@@ -756,6 +818,22 @@ class WorkedReviewEditor extends EditorBase {
                 setTimeout(() => {
                     saveIndicator.className = 'save-indicator';
                 }, 2000);
+            }
+            if (msg.command === 'refreshFiles') {
+                // 외부 변경 시 파일 목록 갱신 — save 트리거하지 않음
+                syncReviewBack();
+                const prevFileName = workedFiles.length > 0 && workedFiles[currentPage]
+                    ? workedFiles[currentPage].fileName : null;
+                workedFiles.length = 0;
+                msg.files.forEach(f => workedFiles.push(f));
+                // 이전 페이지 위치 보존 시도
+                if (prevFileName) {
+                    const idx = workedFiles.findIndex(f => f.fileName === prevFileName);
+                    if (idx >= 0) currentPage = idx;
+                }
+                if (currentPage >= workedFiles.length) currentPage = Math.max(0, workedFiles.length - 1);
+                render();
+                saveViewState();
             }
         });
 

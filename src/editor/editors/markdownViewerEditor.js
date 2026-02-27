@@ -18,7 +18,8 @@ class MarkdownViewerEditor extends EditorBase {
     constructor(context, filePath) {
         super(context);
         this.filePath = filePath;
-        this._fileWatcher = null;
+        this._disposables = [];
+        this._refreshDebounceTimer = null;
         this._md = new Remarkable({
             html: true,
             linkify: true,
@@ -49,9 +50,11 @@ class MarkdownViewerEditor extends EditorBase {
 
     onDispose() {
         MarkdownViewerEditor._instances.delete(this.filePath);
-        if (this._fileWatcher) {
-            this._fileWatcher.dispose();
-            this._fileWatcher = null;
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        if (this._refreshDebounceTimer) {
+            clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = null;
         }
     }
 
@@ -61,11 +64,32 @@ class MarkdownViewerEditor extends EditorBase {
 
         this._renderContent();
 
-        // 파일 변경 감시 — 외부 편집 시 자동 새로고침
-        this._fileWatcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(path.dirname(this.filePath), path.basename(this.filePath))
+        // VS Code 이벤트 기반 파일 동기화 — 편집 중(미저장) 변경 및 저장 시 자동 갱신
+        const debouncedRender = () => {
+            if (this._refreshDebounceTimer) clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = setTimeout(() => {
+                this._renderContent();
+            }, 300);
+        };
+        this._disposables.push(
+            vscode.workspace.onDidChangeTextDocument((e) => {
+                if (e.document.uri.scheme !== 'file') return;
+                if (e.document.uri.fsPath !== this.filePath) return;
+                if (e.contentChanges.length === 0) return;
+                debouncedRender();
+            }),
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                if (doc.uri.fsPath !== this.filePath) return;
+                this._renderContent();
+            })
         );
-        this._fileWatcher.onDidChange(() => this._renderContent());
+
+        // 패널 가시성 변경 시 최신화 (탭 전환 복귀 시)
+        this.panel.onDidChangeViewState(() => {
+            if (this.panel && this.panel.visible) {
+                this._renderContent();
+            }
+        });
 
         this.panel.webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
@@ -82,7 +106,11 @@ class MarkdownViewerEditor extends EditorBase {
         if (!this.panel) return;
         let markdown = '';
         try {
-            markdown = fs.readFileSync(this.filePath, 'utf8');
+            // VS Code에서 열린 문서가 있으면 버퍼 내용 우선 사용 (미저장 변경 포함)
+            const openDoc = vscode.workspace.textDocuments.find(
+                doc => doc.uri.fsPath === this.filePath
+            );
+            markdown = openDoc ? openDoc.getText() : fs.readFileSync(this.filePath, 'utf8');
         } catch (e) {
             markdown = `> 파일을 읽을 수 없습니다: ${e.message}`;
         }
