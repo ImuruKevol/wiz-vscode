@@ -71,12 +71,19 @@ class TodoViewerEditor extends EditorBase {
                     break;
                 }
                 case 'confirmRunTask': {
+                    const ids = message.selectedIds || [];
+                    let confirmMessage;
+                    if (ids.length > 0) {
+                        confirmMessage = `선택된 항목 (${ids.join(', ')})을 실행하시겠습니까?`;
+                    } else {
+                        confirmMessage = '전체 항목을 실행합니다. 시작하시겠습니까?';
+                    }
                     const answer = await vscode.window.showWarningMessage(
-                        '작업을 시작하시겠습니까?', { modal: true }, '시작'
+                        confirmMessage, { modal: true }, '시작'
                     );
                     if (answer === '시작') {
                         await this.handleSave(message.markdown);
-                        await this.handleRunTask();
+                        await this.handleRunTask(ids);
                     }
                     break;
                 }
@@ -152,10 +159,13 @@ class TodoViewerEditor extends EditorBase {
         }
     }
 
-    async handleRunTask() {
+    async handleRunTask(selectedIds = []) {
         try {
+            const query = selectedIds.length > 0
+                ? `${selectedIds.join(', ')} 작업 수행해줘`
+                : '작업 수행해줘';
             await vscode.commands.executeCommand('workbench.action.chat.open', {
-                query: '작업 수행해줘',
+                query,
                 mode: 'agent',
                 attachFiles: [vscode.Uri.file(this.todoFilePath)]
             });
@@ -424,6 +434,60 @@ class TodoViewerEditor extends EditorBase {
         }
         .save-indicator.visible { opacity: 1; }
         .save-indicator.saved { color: var(--vscode-testing-iconPassed); }
+
+        /* Selection checkbox */
+        .page-select-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--vscode-button-background);
+            cursor: pointer;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .page-select-checkbox:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        /* Selected items bar */
+        .selected-items-bar {
+            padding: 6px 20px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+            background: var(--vscode-editor-background);
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        .selected-items-bar.hidden { display: none; }
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: var(--vscode-editor-font-family, monospace);
+        }
+        .selected-tag .tag-remove {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 14px;
+            line-height: 1;
+            margin-left: 2px;
+            font-family: sans-serif;
+        }
+        .selected-tag .tag-remove:hover { opacity: 1; }
+        .selected-label {
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            font-weight: 500;
+            margin-right: 4px;
+        }
     </style>
     <style id="richEditorStyles"></style>
 </head>
@@ -447,6 +511,7 @@ class TodoViewerEditor extends EditorBase {
     <div class="page-info" id="pageInfo">
         <div class="page-info-row">
             <span class="page-info-label">ID</span>
+            <input type="checkbox" class="page-select-checkbox" id="pageSelectCheckbox" title="이 항목 선택" />
             <input class="page-id-input" id="pageId" value="" placeholder="FN-XXXXXXXX-XXXX" />
             <div class="pagination" id="pagination">
                 <button class="nav-btn" id="btnPrev" title="이전"><svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg></button>
@@ -458,6 +523,11 @@ class TodoViewerEditor extends EditorBase {
             <span class="page-info-label">제목</span>
             <input class="page-title-input" id="pageTitle" value="" placeholder="(제목 없음)" />
         </div>
+    </div>
+
+    <!-- Selected Items Bar -->
+    <div class="selected-items-bar hidden" id="selectedItemsBar">
+        <span class="selected-label">선택됨:</span>
     </div>
 
     <!-- Rich Editor Container -->
@@ -475,6 +545,7 @@ class TodoViewerEditor extends EditorBase {
         const initialContent = \`${escapedContent}\`;
         let pages = [];
         let currentPage = 0;
+        let selectedIds = new Set();
 
         // ========== Rich Editor 초기화 ==========
         const richEditor = new RichEditor(document.getElementById('editorRoot'), {
@@ -491,6 +562,8 @@ class TodoViewerEditor extends EditorBase {
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const saveIndicator = document.getElementById('saveIndicator');
+        const pageSelectCheckbox = document.getElementById('pageSelectCheckbox');
+        const selectedItemsBar = document.getElementById('selectedItemsBar');
 
         // ========== Parse todo.md into pages ==========
         function parseTodoContent(content) {
@@ -552,6 +625,8 @@ class TodoViewerEditor extends EditorBase {
             if (pages.length === 0) {
                 pageIdInput.value = '';
                 pageIdInput.disabled = true;
+                pageSelectCheckbox.checked = false;
+                pageSelectCheckbox.disabled = true;
                 pageTitleInput.value = '';
                 pageTitleInput.placeholder = 'TODO가 없습니다';
                 pageTitleInput.disabled = true;
@@ -559,6 +634,7 @@ class TodoViewerEditor extends EditorBase {
                 btnPrev.disabled = true;
                 btnNext.disabled = true;
                 syncBodyToEditor();
+                renderSelectedItems();
                 return;
             }
 
@@ -568,12 +644,15 @@ class TodoViewerEditor extends EditorBase {
             const page = pages[currentPage];
             pageIdInput.value = page.id || '';
             pageIdInput.disabled = false;
+            pageSelectCheckbox.checked = page.id ? selectedIds.has(page.id) : false;
+            pageSelectCheckbox.disabled = !page.id;
             pageTitleInput.value = page.title || '';
             pageTitleInput.placeholder = '(제목 없음)';
             pageTitleInput.disabled = false;
 
             syncBodyToEditor();
             renderPagination();
+            renderSelectedItems();
 
             btnPrev.disabled = currentPage <= 0;
             btnNext.disabled = currentPage >= pages.length - 1;
@@ -582,7 +661,17 @@ class TodoViewerEditor extends EditorBase {
         // Sync input changes back to page data
         pageIdInput.addEventListener('change', () => {
             if (pages.length > 0 && pages[currentPage]) {
-                pages[currentPage].id = pageIdInput.value.trim();
+                const oldId = pages[currentPage].id;
+                const newId = pageIdInput.value.trim();
+                if (selectedIds.has(oldId)) {
+                    selectedIds.delete(oldId);
+                    if (newId) selectedIds.add(newId);
+                }
+                pages[currentPage].id = newId;
+                pageSelectCheckbox.checked = newId ? selectedIds.has(newId) : false;
+                pageSelectCheckbox.disabled = !newId;
+                renderSelectedItems();
+                saveViewState();
             }
         });
         pageTitleInput.addEventListener('change', () => {
@@ -590,6 +679,57 @@ class TodoViewerEditor extends EditorBase {
                 pages[currentPage].title = pageTitleInput.value.trim();
             }
         });
+
+        // ========== Checkbox Selection ==========
+        pageSelectCheckbox.addEventListener('change', () => {
+            if (pages.length > 0 && pages[currentPage]) {
+                const pageId = pages[currentPage].id;
+                if (!pageId) {
+                    pageSelectCheckbox.checked = false;
+                    return;
+                }
+                if (pageSelectCheckbox.checked) {
+                    selectedIds.add(pageId);
+                } else {
+                    selectedIds.delete(pageId);
+                }
+                renderSelectedItems();
+                saveViewState();
+            }
+        });
+
+        function renderSelectedItems() {
+            selectedItemsBar.innerHTML = '';
+            if (selectedIds.size === 0) {
+                selectedItemsBar.classList.add('hidden');
+                return;
+            }
+            selectedItemsBar.classList.remove('hidden');
+
+            const label = document.createElement('span');
+            label.className = 'selected-label';
+            label.textContent = '선택됨:';
+            selectedItemsBar.appendChild(label);
+
+            for (const id of selectedIds) {
+                const tag = document.createElement('span');
+                tag.className = 'selected-tag';
+                tag.innerHTML = id + ' <span class="tag-remove" data-id="' + id + '">×</span>';
+                selectedItemsBar.appendChild(tag);
+            }
+
+            selectedItemsBar.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const removeId = e.target.dataset.id;
+                    selectedIds.delete(removeId);
+                    if (pages.length > 0 && pages[currentPage] && pages[currentPage].id === removeId) {
+                        pageSelectCheckbox.checked = false;
+                    }
+                    renderSelectedItems();
+                    saveViewState();
+                });
+            });
+        }
 
         function renderPagination() {
             pageNumbers.innerHTML = '';
@@ -733,7 +873,8 @@ class TodoViewerEditor extends EditorBase {
         document.getElementById('btnRunTask').addEventListener('click', () => {
             syncBodyFromEditor();
             const md = pagesToMarkdown(pages);
-            vscode.postMessage({ command: 'confirmRunTask', markdown: md });
+            const ids = Array.from(selectedIds);
+            vscode.postMessage({ command: 'confirmRunTask', markdown: md, selectedIds: ids });
         });
 
         // ========== Messages from extension ==========
@@ -747,6 +888,8 @@ class TodoViewerEditor extends EditorBase {
                 }, 2000);
             }
             if (msg.command === 'deleteConfirmed' && msg.confirmed) {
+                const deletedId = pages[currentPage]?.id;
+                if (deletedId) selectedIds.delete(deletedId);
                 pages.splice(currentPage, 1);
                 if (currentPage >= pages.length && currentPage > 0) currentPage--;
                 const md = pagesToMarkdown(pages);
@@ -757,6 +900,10 @@ class TodoViewerEditor extends EditorBase {
             if (msg.command === 'refreshContent') {
                 pages = parseTodoContent(msg.content);
                 if (currentPage >= pages.length) currentPage = Math.max(0, pages.length - 1);
+                const validIds = new Set(pages.map(p => p.id).filter(Boolean));
+                for (const id of selectedIds) {
+                    if (!validIds.has(id)) selectedIds.delete(id);
+                }
                 render();
                 saveViewState();
             }
@@ -774,7 +921,7 @@ class TodoViewerEditor extends EditorBase {
 
         // ========== State persistence ==========
         function saveViewState() {
-            vscode.setState({ currentPage });
+            vscode.setState({ currentPage, selectedIds: Array.from(selectedIds) });
         }
 
         // ========== Init ==========
@@ -782,6 +929,9 @@ class TodoViewerEditor extends EditorBase {
         pages = parseTodoContent(initialContent);
         if (prevState) {
             currentPage = prevState.currentPage || 0;
+            if (prevState.selectedIds) {
+                prevState.selectedIds.forEach(id => selectedIds.add(id));
+            }
         }
         render();
     </script>

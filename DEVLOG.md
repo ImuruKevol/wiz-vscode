@@ -11,6 +11,8 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.3.3 (Memo Feature & Copilot Chat Agent Mode)
 
+- [124](./devlog/v1.3.3/124-rich-editor-improvements.md) - Rich Editor 개선 (목록 depth, 소스코드 보기, 붙여넣기 서식 정리)
+- [123](./devlog/v1.3.3/123-todo-selection-feature.md) - TODO 목록 선택 시작 기능 (체크박스, 해시태그 바, 선택 실행)
 - [122](./devlog/v1.3.3/122-editor-sync-vscode-events.md) - 에디터 파일 동기화 — VS Code 이벤트 기반 재구현
 - [121](./devlog/v1.3.3/121-editor-realtime-refresh.md) - 에디터 실시간 새로고침 (fs.watch 전환, 마크다운 뷰어 적용)
 - [120](./devlog/v1.3.3/120-editor-file-sync-refresh-fix.md) - 에디터 파일 동기화 새로고침 동작 수정 (디바운스, onDidCreate, 가시성 갱신)

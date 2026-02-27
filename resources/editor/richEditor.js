@@ -101,6 +101,8 @@ class RichEditor {
         // --- Lists ---
         toolbar.appendChild(this._btn('insertUnorderedList', '•≡', '목록'));
         toolbar.appendChild(this._btn('insertOrderedList', '1.', '번호 목록'));
+        toolbar.appendChild(this._btn('indentList', '→', '들여쓰기 (Tab)'));
+        toolbar.appendChild(this._btn('outdentList', '←', '내어쓰기 (Shift+Tab)'));
 
         toolbar.appendChild(this._sep());
 
@@ -140,6 +142,20 @@ class RichEditor {
         toolbar.appendChild(this._btn('undo', '↩', '실행취소 (Ctrl+Z)'));
         toolbar.appendChild(this._btn('redo', '↪', '다시실행 (Ctrl+Y)'));
 
+        // --- Source Code View (rightmost) ---
+        const sourceBtn = document.createElement('button');
+        sourceBtn.className = 'toolbar-btn source-code-btn';
+        sourceBtn.title = '소스코드 보기';
+        sourceBtn.innerHTML = '&lt;/&gt;';
+        sourceBtn.style.cssText = 'margin-left:auto;font-family:monospace;font-size:11px;';
+        this._sourceBtn = sourceBtn;
+        this._isSourceMode = false;
+        sourceBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this._toggleSourceMode();
+        });
+        toolbar.appendChild(sourceBtn);
+
         this.container.appendChild(toolbar);
 
         // Editor area
@@ -150,9 +166,21 @@ class RichEditor {
         ed.contentEditable = 'true';
         ed.dataset.placeholder = this.options.placeholder;
         ed.addEventListener('input', () => this._fireInput());
+        // Source code textarea
+        const sourceArea = document.createElement('textarea');
+        sourceArea.className = 'rich-source-area';
+        sourceArea.style.display = 'none';
+        sourceArea.spellcheck = false;
+        sourceArea.addEventListener('input', () => this._fireInput());
+        editorContainer.appendChild(sourceArea);
+        this._sourceArea = sourceArea;
+
         editorContainer.appendChild(ed);
         this.container.appendChild(editorContainer);
         this.editor = ed;
+
+        // Paste sanitization
+        this._setupPasteHandler();
 
         // Markdown auto-format
         this._setupAutoFormat();
@@ -177,6 +205,8 @@ class RichEditor {
             if (cmd === 'code') this._wrapSelectionWith('code');
             else if (cmd === 'blockquote') document.execCommand('formatBlock', false, 'blockquote');
             else if (cmd === 'codeBlock') this._insertCodeBlock();
+            else if (cmd === 'indentList') this._indentListItem();
+            else if (cmd === 'outdentList') this._outdentListItem();
             else document.execCommand(cmd, false, null);
             this._fireInput();
         });
@@ -244,6 +274,19 @@ class RichEditor {
             }
             if (e.key === 'Enter' && !e.shiftKey) {
                 this._handleEnterAutoFormat(e);
+            }
+            // Tab / Shift+Tab for list indent/outdent
+            if (e.key === 'Tab') {
+                const li = this._getParentTag(window.getSelection()?.anchorNode, 'LI');
+                if (li) {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        this._outdentListItem();
+                    } else {
+                        this._indentListItem();
+                    }
+                    this._fireInput();
+                }
             }
         });
     }
@@ -344,6 +387,194 @@ class RichEditor {
         }
     }
 
+    /* ===== Paste sanitization ===== */
+    _setupPasteHandler() {
+        this.editor.addEventListener('paste', (e) => {
+            // Check for image paste (only if showImage)
+            if (this.options.showImage) {
+                const items = e.clipboardData?.items;
+                if (items) {
+                    for (const item of items) {
+                        if (item.type.startsWith('image/')) {
+                            e.preventDefault();
+                            const file = item.getAsFile();
+                            if (file) this._handleImageFile(file);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // HTML paste: sanitize to only supported formatting
+            const html = e.clipboardData?.getData('text/html');
+            if (html) {
+                e.preventDefault();
+                const cleaned = this._sanitizePastedHtml(html);
+                document.execCommand('insertHTML', false, cleaned);
+                this._fireInput();
+                return;
+            }
+            // Plain text paste: let default behavior handle
+        });
+    }
+
+    _sanitizePastedHtml(html) {
+        const allowedTags = new Set(['P', 'DIV', 'BR', 'H1', 'H2', 'H3',
+            'STRONG', 'B', 'EM', 'I', 'S', 'DEL', 'STRIKE',
+            'CODE', 'PRE', 'BLOCKQUOTE',
+            'UL', 'OL', 'LI',
+            'A', 'IMG', 'HR',
+            'TABLE', 'TR', 'TH', 'TD', 'THEAD', 'TBODY']);
+
+        const tagAttrs = { 'A': ['href'], 'IMG': ['src', 'alt'] };
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        function cleanNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                return document.createTextNode(node.textContent);
+            }
+            if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+            const tag = node.tagName.toUpperCase();
+
+            if (!allowedTags.has(tag)) {
+                const frag = document.createDocumentFragment();
+                Array.from(node.childNodes).forEach(child => {
+                    const cleaned = cleanNode(child);
+                    if (cleaned) frag.appendChild(cleaned);
+                });
+                return frag;
+            }
+
+            const cleanEl = document.createElement(tag);
+            const keepAttrs = tagAttrs[tag] || [];
+            keepAttrs.forEach(attr => {
+                const val = node.getAttribute(attr);
+                if (val) cleanEl.setAttribute(attr, val);
+            });
+
+            Array.from(node.childNodes).forEach(child => {
+                const cleaned = cleanNode(child);
+                if (cleaned) cleanEl.appendChild(cleaned);
+            });
+
+            return cleanEl;
+        }
+
+        const resultDiv = document.createElement('div');
+        Array.from(tempDiv.childNodes).forEach(child => {
+            const cleaned = cleanNode(child);
+            if (cleaned) resultDiv.appendChild(cleaned);
+        });
+        return resultDiv.innerHTML;
+    }
+
+    /* ===== List indent/outdent ===== */
+    _getParentTag(node, tagName) {
+        let current = node;
+        while (current && current !== this.editor) {
+            if (current.nodeType === Node.ELEMENT_NODE && current.tagName === tagName) {
+                return current;
+            }
+            current = current.parentNode;
+        }
+        return null;
+    }
+
+    _indentListItem() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const li = this._getParentTag(sel.anchorNode, 'LI');
+        if (!li) return;
+        const prevLi = li.previousElementSibling;
+        if (!prevLi) return; // can't indent first item
+
+        const parentList = li.parentElement;
+        const listTag = parentList.tagName;
+
+        // Check if previous li already has a sub-list
+        let subList = prevLi.querySelector(':scope > ul, :scope > ol');
+        if (!subList) {
+            subList = document.createElement(listTag);
+            prevLi.appendChild(subList);
+        }
+        subList.appendChild(li);
+
+        // Restore cursor
+        const range = document.createRange();
+        range.setStart(li, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    _outdentListItem() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const li = this._getParentTag(sel.anchorNode, 'LI');
+        if (!li) return;
+
+        const parentList = li.parentElement;
+        const parentLi = parentList.parentElement;
+        if (!parentLi || parentLi.tagName !== 'LI') return; // already at top level
+
+        const grandParentList = parentLi.parentElement;
+
+        // Move any siblings after current li into a new sub-list inside current li
+        const siblingsAfter = [];
+        let next = li.nextElementSibling;
+        while (next) {
+            siblingsAfter.push(next);
+            next = next.nextElementSibling;
+        }
+        if (siblingsAfter.length > 0) {
+            let subList = li.querySelector(':scope > ul, :scope > ol');
+            if (!subList) {
+                subList = document.createElement(parentList.tagName);
+                li.appendChild(subList);
+            }
+            siblingsAfter.forEach(s => subList.appendChild(s));
+        }
+
+        // Move li after parentLi in grandParentList
+        grandParentList.insertBefore(li, parentLi.nextSibling);
+
+        // If parentList is now empty, remove it
+        if (parentList.children.length === 0) {
+            parentList.remove();
+        }
+
+        // Restore cursor
+        const range = document.createRange();
+        range.setStart(li, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    /* ===== Source Code View ===== */
+    _toggleSourceMode() {
+        this._isSourceMode = !this._isSourceMode;
+        if (this._isSourceMode) {
+            const md = RichEditor.htmlToMarkdown(this.editor);
+            this._sourceArea.value = md;
+            this.editor.style.display = 'none';
+            this._sourceArea.style.display = 'block';
+            this._sourceBtn.classList.add('active');
+            this._sourceArea.focus();
+        } else {
+            const md = this._sourceArea.value;
+            this.editor.innerHTML = md ? RichEditor.markdownToHtml(md) : '';
+            this._sourceArea.style.display = 'none';
+            this.editor.style.display = '';
+            this._sourceBtn.classList.remove('active');
+            this.editor.focus();
+        }
+        this._fireInput();
+    }
+
     /* ===== Image drag & drop ===== */
     _setupImageDragDrop() {
         const overlay = document.createElement('div');
@@ -374,20 +605,6 @@ class RichEditor {
             Array.from(e.dataTransfer.files)
                 .filter(f => f.type.startsWith('image/'))
                 .forEach(f => this._handleImageFile(f));
-        });
-
-        // Paste
-        this.editor.addEventListener('paste', (e) => {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-            for (const item of items) {
-                if (item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    const file = item.getAsFile();
-                    if (file) this._handleImageFile(file);
-                    return;
-                }
-            }
         });
     }
 
@@ -420,11 +637,27 @@ class RichEditor {
     }
 
     /* ===== Public API ===== */
-    getHtml() { return this.editor.innerHTML; }
-    setHtml(html) { this.editor.innerHTML = html; }
+    getHtml() {
+        if (this._isSourceMode) {
+            const md = this._sourceArea.value;
+            this.editor.innerHTML = md ? RichEditor.markdownToHtml(md) : '';
+        }
+        return this.editor.innerHTML;
+    }
+    setHtml(html) {
+        this.editor.innerHTML = html;
+        if (this._isSourceMode) {
+            this._sourceArea.value = RichEditor.htmlToMarkdown(this.editor);
+        }
+    }
     getText() { return this.editor.textContent || ''; }
     focus() { setTimeout(() => this.editor.focus(), 50); }
-    setEditable(flag) { this.editor.contentEditable = flag ? 'true' : 'false'; }
+    setEditable(flag) {
+        this.editor.contentEditable = flag ? 'true' : 'false';
+        if (this._sourceArea) {
+            this._sourceArea.disabled = !flag;
+        }
+    }
 
     /* ===== Static: HTML → Markdown ===== */
     static htmlToMarkdown(root) {
@@ -491,8 +724,21 @@ class RichEditor {
                 }
                 case 'li': {
                     const prefix = listType === 'ol' ? (listIndex + 1) + '. ' : '- ';
-                    const content = children().trim();
-                    return indent + prefix + content + '\n';
+                    let textContent = '';
+                    let nestedContent = '';
+
+                    for (const child of node.childNodes) {
+                        if (child.nodeType === Node.ELEMENT_NODE) {
+                            const childTag = child.tagName.toLowerCase();
+                            if (childTag === 'ul' || childTag === 'ol') {
+                                nestedContent += process(child, null, 0, indent + '  ');
+                                continue;
+                            }
+                        }
+                        textContent += process(child, null, 0, indent);
+                    }
+
+                    return indent + prefix + textContent.trim() + '\n' + nestedContent;
                 }
                 case 'a': {
                     const href = node.getAttribute('href') || '';
@@ -555,18 +801,7 @@ class RichEditor {
         html = html.replace(/^>\s?(.*)$/gm, '<blockquote>$1</blockquote>');
         html = html.replace(/<\/blockquote>\n<blockquote>/g, '\n');
 
-        html = html.replace(/^(\s*)[-*]\s+(.+)$/gm, (match, indent, text) => {
-            const level = Math.floor(indent.length / 2);
-            return '<li data-level="' + level + '">' + text + '</li>';
-        });
-        html = html.replace(/^(\s*)\d+\.\s+(.+)$/gm, (match, indent, text) => {
-            const level = Math.floor(indent.length / 2);
-            return '<oli data-level="' + level + '">' + text + '</oli>';
-        });
-        html = html.replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
-        html = html.replace(/((?:<oli[^>]*>.*<\/oli>\n?)+)/g, (m) => {
-            return '<ol>' + m.replace(/<\/?oli/g, (t) => t.replace('oli', 'li')) + '</ol>';
-        });
+        html = RichEditor._processMarkdownLists(html);
 
         const lines = html.split('\n');
         html = lines.map(line => {
@@ -582,6 +817,71 @@ class RichEditor {
 
     static _escapeHtmlStatic(str) {
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /** Process markdown list lines into properly nested HTML lists */
+    static _processMarkdownLists(html) {
+        const lines = html.split('\n');
+        const result = [];
+        let i = 0;
+
+        while (i < lines.length) {
+            const ulMatch = lines[i].match(/^(\s*)[-*]\s+(.+)$/);
+            const olMatch = !ulMatch && lines[i].match(/^(\s*)\d+\.\s+(.+)$/);
+
+            if (ulMatch || olMatch) {
+                const listItems = [];
+                while (i < lines.length) {
+                    const um = lines[i].match(/^(\s*)[-*]\s+(.+)$/);
+                    const om = !um && lines[i].match(/^(\s*)\d+\.\s+(.+)$/);
+                    if (!um && !om) break;
+                    listItems.push({
+                        level: Math.floor((um || om)[1].length / 2),
+                        text: (um || om)[2],
+                        type: um ? 'ul' : 'ol'
+                    });
+                    i++;
+                }
+                result.push(RichEditor._buildNestedList(listItems));
+            } else {
+                result.push(lines[i]);
+                i++;
+            }
+        }
+
+        return result.join('\n');
+    }
+
+    static _buildNestedList(items) {
+        if (items.length === 0) return '';
+
+        function buildLevel(startIdx, minLevel) {
+            const listType = items[startIdx].type;
+            let html = '<' + listType + '>';
+            let i = startIdx;
+
+            while (i < items.length && items[i].level >= minLevel) {
+                if (items[i].level === minLevel) {
+                    html += '<li>' + items[i].text;
+                    i++;
+                    if (i < items.length && items[i].level > minLevel) {
+                        const nested = buildLevel(i, items[i].level);
+                        html += nested.html;
+                        i = nested.nextIdx;
+                    }
+                    html += '</li>';
+                } else {
+                    const nested = buildLevel(i, items[i].level);
+                    html += nested.html;
+                    i = nested.nextIdx;
+                }
+            }
+
+            html += '</' + listType + '>';
+            return { html, nextIdx: i };
+        }
+
+        return buildLevel(0, items[0].level).html;
     }
 
     /* ===== Static: CSS ===== */
@@ -723,6 +1023,26 @@ class RichEditor {
             text-align: left;
         }
         .rich-editor-content th { background: var(--vscode-editorWidget-background); font-weight: 600; }
+
+        /* Source code area */
+        .rich-source-area {
+            flex: 1;
+            width: 100%;
+            padding: 12px 20px;
+            background: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: var(--vscode-editor-font-family, monospace);
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+        .source-code-btn.active {
+            background: var(--vscode-toolbar-activeBackground, rgba(99,102,103,0.4));
+            color: var(--vscode-textLink-foreground);
+        }
 
         /* Image drop overlay */
         .rich-drop-overlay {
