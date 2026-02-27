@@ -205,6 +205,23 @@ class SettingsCategory extends CategoryItem {
         const items = [];
         const version = this.provider.extensionVersion || 'unknown';
         const projectName = this.provider.currentProjectName || 'main';
+        const isWiz = this.provider.isWizProject !== false;
+
+        // 비-WIZ 프로젝트: 최소 정보만 표시
+        if (!isWiz) {
+            const notWizItem = new vscode.TreeItem('WIZ 프로젝트가 아닙니다', vscode.TreeItemCollapsibleState.None);
+            notWizItem.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('disabledForeground'));
+            notWizItem.contextValue = 'settingsItem';
+            items.push(notWizItem);
+
+            // 버전 정보
+            const versionItem = new vscode.TreeItem(`version: v${version}`, vscode.TreeItemCollapsibleState.None);
+            versionItem.iconPath = new vscode.ThemeIcon('info');
+            versionItem.contextValue = 'settingsItem';
+            items.push(versionItem);
+
+            return items;
+        }
 
         // 0. README
         const readmePath = this.provider.workspaceRoot

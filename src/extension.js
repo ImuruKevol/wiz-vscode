@@ -151,20 +151,43 @@ function activate(context) {
         if (!workspaceRoot) {
             fileExplorerProvider.workspaceRoot = undefined;
             fileExplorerProvider.wizRoot = undefined;
+            fileExplorerProvider.isWizProject = false;
             fileExplorerProvider.currentProjectName = currentProject;
             fileExplorerProvider.refresh();
             return;
         }
 
-        const displayProjectName = resolveProjectNameCase(workspaceRoot, currentProject);
-        const projectPath = path.join(workspaceRoot, 'project', displayProjectName);
-        fileExplorerProvider.workspaceRoot = projectPath;
-        fileExplorerProvider.wizRoot = workspaceRoot;
-        fileExplorerProvider.currentProjectName = displayProjectName;
-        fileExplorerProvider.refresh();
-        
-        if (treeView) {
-            treeView.title = displayProjectName;
+        // WIZ 프로젝트 여부 판별: project/ 폴더가 존재하는지 확인
+        const projectDir = path.join(workspaceRoot, 'project');
+        const isWiz = fs.existsSync(projectDir);
+
+        if (isWiz) {
+            const displayProjectName = resolveProjectNameCase(workspaceRoot, currentProject);
+            const projectPath = path.join(workspaceRoot, 'project', displayProjectName);
+            fileExplorerProvider.workspaceRoot = projectPath;
+            fileExplorerProvider.wizRoot = workspaceRoot;
+            fileExplorerProvider.isWizProject = true;
+            fileExplorerProvider.currentProjectName = displayProjectName;
+            fileExplorerProvider.refresh();
+
+            if (treeView) {
+                treeView.title = displayProjectName;
+            }
+
+            vscode.commands.executeCommand('setContext', 'wiz.isWizProject', true);
+        } else {
+            // 비-WIZ 프로젝트: 워크스페이스 폴더 자체를 사용
+            fileExplorerProvider.workspaceRoot = workspaceRoot;
+            fileExplorerProvider.wizRoot = workspaceRoot;
+            fileExplorerProvider.isWizProject = false;
+            fileExplorerProvider.currentProjectName = '';
+            fileExplorerProvider.refresh();
+
+            if (treeView) {
+                treeView.title = path.basename(workspaceRoot);
+            }
+
+            vscode.commands.executeCommand('setContext', 'wiz.isWizProject', false);
         }
 
         // Service managers 상태 동기화
@@ -180,6 +203,64 @@ function activate(context) {
         // MCP 서버와 상태 동기화 (.vscode/.wiz-state.json)
         mcpManager.writeState();
     }
+
+    // ==================== MCP State File Watcher ====================
+    // MCP에서 프로젝트 스위칭 시 .wiz-state.json이 변경되면 UI 동기화
+    let stateFileWatcher = null;
+    let stateWatcherDebounce = null;
+
+    function setupStateFileWatcher() {
+        if (stateFileWatcher) {
+            stateFileWatcher.dispose();
+            stateFileWatcher = null;
+        }
+        if (!workspaceRoot) return;
+
+        const statePattern = new vscode.RelativePattern(workspaceRoot, '.vscode/.wiz-state.json');
+        stateFileWatcher = vscode.workspace.createFileSystemWatcher(statePattern);
+
+        const handleStateChange = () => {
+            if (stateWatcherDebounce) clearTimeout(stateWatcherDebounce);
+            stateWatcherDebounce = setTimeout(() => {
+                stateWatcherDebounce = null;
+                try {
+                    const statePath = path.join(workspaceRoot, '.vscode', '.wiz-state.json');
+                    if (!fs.existsSync(statePath)) return;
+                    const raw = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+                    if (!raw.sessions) return;
+
+                    // 가장 최근 세션에서 currentProject 읽기
+                    let latestProject = null;
+                    let latestTime = -1;
+                    for (const session of Object.values(raw.sessions)) {
+                        if ((session.lastUsed || 0) > latestTime) {
+                            latestTime = session.lastUsed || 0;
+                            latestProject = session.currentProject;
+                        }
+                    }
+
+                    if (latestProject && latestProject !== currentProject) {
+                        currentProject = latestProject;
+                        updateProjectRoot();
+                    }
+                } catch (e) { /* ignore parse errors */ }
+            }, 500);
+        };
+
+        stateFileWatcher.onDidChange(handleStateChange);
+        stateFileWatcher.onDidCreate(handleStateChange);
+
+        context.subscriptions.push(stateFileWatcher);
+    }
+
+    setupStateFileWatcher();
+
+    // 워크스페이스 변경 시 watcher 재설정
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            setupStateFileWatcher();
+        })
+    );
 
     // ==================== Tree View ====================
     const WizDragAndDropController = require('./explorer/wizDragAndDropController');
@@ -328,36 +409,91 @@ function activate(context) {
                     '',
                     '### Forced Instruction (파일 상단, 우선순위 높은 위치에 배치)',
                     '',
-                    '> **Task 기반 작업 관리**: 사용자가 별도 내용 없이 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 정의된 작업을 순서대로 수행한다. 작업은 `# FN-{YYYYMMDD}-{NNNN}: {제목}` 형식의 헤딩으로 구분되며, 작업 완료 후에는 Devlog를 남기고 `.github/task/worked/{작업번호}.md`에 아카이브한 뒤 `todo.md`에서 해당 항목을 삭제한다. 사용자가 **"todo에 추가해줘"**라고 하면 동일한 번호 규칙으로 항목을 추가한다. 상세 규칙은 하단 "Task 기반 작업 관리" 섹션을 참조한다.',
+                    '> **Task 기반 작업 관리**: 사용자가 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 순서대로 수행한다. 상세 규칙은 하단 "Task 기반 작업 관리" 섹션을 참조한다.',
                     '',
                     '### Refer Instruction (파일 하단에 상세 규칙 섹션으로 배치)',
                     '',
                     '## Task 기반 작업 관리',
                     '',
-                    '사용자가 별도 내용 없이 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 정의된 작업을 순서대로 수행한다.',
+                    '사용자가 **"작업 수행해줘"**, **"todo 작업 진행해줘"** 등으로 작업을 지시하면, `.github/task/todo.md`를 읽어 정의된 작업을 순서대로 수행한다.',
+                    '',
+                    '> ⚠️ **TODO 파일 경로 고정**: `{WIZ_ROOT}/.github/task/todo.md`에 작성한다. 프로젝트 소스 내(`project/{name}/`)나 다른 위치에 생성하지 않는다.',
+                    '',
+                    '> ⚠️ **"TODO 작성해줘" 명령**: 사용자의 요구사항·설계 문서를 분석하여 **todo.md에 신규 작업 항목만 등록**하고, 실제 개발 작업은 수행하지 않는다.',
                     '',
                     '### 디렉토리 구조',
+                    '',
                     '```',
                     '.github/task/',
-                    '├── todo.md              # 작업 목록',
+                    '├── todo.md              # 작업 목록 (할 일)',
                     '├── worked/              # 완료된 작업 아카이브',
-                    '└── reviewed/            # 리뷰 완료 후 이동',
+                    '│   └── FN-20260222-0001.md',
+                    '└── reviewed/            # 리뷰 완료 후 이동된 아카이브',
+                    '    └── FN-20260222-0001.md',
                     '```',
                     '',
                     '### todo.md 형식',
-                    '작업은 `# FN-{YYYYMMDD}-{NNNN}: {제목}` 헤딩으로 구분.',
+                    '',
+                    '작업은 `#` 헤딩과 **작업 번호** `FN-{YYYYMMDD}-{NNNN}`으로 구분한다.',
+                    '',
+                    '```markdown',
+                    '# FN-20260222-0001: Endpoint 설정 / Variables 탭 관련',
+                    '- endpoint / variables 탭에서 api parameters 설정에서 actions는 고정된 값이니까 토글 형태로 선택하는 UI로 구현',
+                    '',
+                    '# FN-20260222-0002: API Spec & Test 탭 관련',
+                    '- API Spec & Test 화면에서 실제 API로 연결해서 결과 확인하도록 구현',
+                    '```',
                     '',
                     '### 작업 수행 흐름',
-                    '1. todo.md 읽기 → 2. 작업 수행 → 3. Devlog 작성 → 4. worked 아카이브 생성 → 5. todo.md 정리 → 6. 더미 템플릿 유지',
                     '',
-                    '### worked 아카이브 파일 형식',
-                    '`# {작업번호}: {제목}` > `## 작업 지시 원문` (원문 그대로) > `## 수행 내역 요약` > `## 관련 Devlog`',
+                    '1. **todo.md 읽기**: 작업 목록 파악',
+                    '2. **작업 수행**: 번호 순서대로 (또는 사용자가 특정 번호 지정 시 해당 작업만) 수행. 개발 원칙 준수.',
+                    '3. **각 Task 완료 즉시 정리** (다음 Task로 넘어가기 전에 반드시 수행):',
+                    '   1. **Devlog 작성**: Devlog 규칙에 따라 행 추가 + 상세 파일 생성',
+                    '   2. **worked 아카이브 생성**: `.github/task/worked/{작업번호}.md`에 아래 형식으로 기록',
+                    '   3. **todo.md 정리**: 완료된 작업 항목을 `todo.md`에서 삭제',
+                    '   4. **더미 템플릿 유지**: 모든 항목 삭제 시, 마지막 번호의 다음 순번으로 더미 템플릿을 남긴다.',
                     '',
-                    '### todo 항목 추가',
-                    '`FN-{YYYYMMDD}-{NNNN}` 형식 번호 자동 생성, `todo.md`에 추가.',
+                    '> ⚠️ **즉시 정리 원칙**: 하나의 Task(FN-번호) 완료 후, **반드시 위 3-1 ~ 3-4를 모두 수행한 뒤** 다음 Task로 넘어간다. 여러 Task를 먼저 수행하고 나중에 몰아서 정리하는 것은 **금지**한다.',
                     '',
-                    '### 리뷰 정리',
-                    'worked 파일의 `# Review` 섹션 → TODO 변환, reviewed 폴더로 이동.',
+                    '### worked 아카이브 형식',
+                    '',
+                    '```markdown',
+                    '# {작업번호}: {작업 제목}',
+                    '',
+                    '## 작업 지시 원문',
+                    '{todo.md에 있던 원본 내용 그대로 복사 — 요약·정리하지 않고 원문 보존}',
+                    '',
+                    '## 수행 내역 요약',
+                    '{무엇을 어떻게 구현했는지 간결하게 요약}',
+                    '',
+                    '## 관련 Devlog',
+                    '- **날짜**: {YYYY-MM-DD}',
+                    '- **Devlog ID**: {NNN}',
+                    '- **상세 파일**: `devlog/{YYYY-MM-DD}/{NNN}-{slug}.md`',
+                    '```',
+                    '',
+                    '### todo 항목 추가 규칙',
+                    '',
+                    '1. 기존 작업 번호 확인',
+                    '2. `FN-{YYYYMMDD}-{NNNN}` 형식으로 생성 (해당 날짜의 마지막 번호 + 1)',
+                    '3. `# FN-{번호}: {제목}` 헤딩과 하위 항목으로 추가',
+                    '',
+                    '### 특정 작업 지정 실행',
+                    '',
+                    '- "FN-20260222-0001 작업 수행해줘" → 해당 번호만 수행',
+                    '- "todo 1번 작업 진행해줘" → todo.md의 첫 번째 항목 수행',
+                    '- 번호 미지정 시 → 첫 번째 항목부터 순서대로 (한 번에 하나씩)',
+                    '',
+                    '### 리뷰 정리 및 TODO 생성',
+                    '',
+                    '사용자가 **"리뷰 정리해줘"** 등으로 요청하면:',
+                    '',
+                    '1. **worked 폴더 스캔**: `.github/task/worked/` 내 모든 `.md` 파일을 읽는다.',
+                    '2. **`# Review` 섹션 확인**: 있는 파일만 처리, 없는 파일은 건드리지 않는다.',
+                    '3. **TODO 항목 생성**: Review 내용을 정리하여 todo.md에 새 작업 항목으로 추가한다.',
+                    '4. **reviewed 폴더로 이동**: Review 섹션이 있던 worked 파일을 `.github/task/reviewed/`로 이동한다.',
+                    '5. **결과 보고**: 처리된 파일 수, 생성된 TODO 항목 수, 스킵된 파일 수를 알린다.',
                 ].join('\n');
 
                 try {

@@ -489,13 +489,18 @@
         },
         {
           "command": "wizExplorer.build",
-          "when": "view == wizInfo",
+          "when": "view == wizInfo && wiz.isWizProject",
           "group": "navigation@2"
         },
         {
           "command": "wizExplorer.switchProject",
-          "when": "view == wizInfo",
+          "when": "view == wizInfo && wiz.isWizProject",
           "group": "navigation@3"
+        },
+        {
+          "command": "wizExplorer.refresh",
+          "when": "view == wizExplorer",
+          "group": "navigation@1"
         },
         {
           "command": "wizCopilot.taskAction",
@@ -503,14 +508,19 @@
           "group": "navigation@1"
         },
         {
-          "command": "wizTask.upload",
+          "command": "wizCopilot.refresh",
           "when": "view == wizTask",
           "group": "navigation@2"
         },
         {
-          "command": "wizTask.download",
+          "command": "wizTask.upload",
           "when": "view == wizTask",
           "group": "navigation@3"
+        },
+        {
+          "command": "wizTask.download",
+          "when": "view == wizTask",
+          "group": "navigation@4"
         },
         {
           "command": "wizCopilot.generateTaskInstruction",
@@ -518,19 +528,24 @@
           "group": "navigation@1"
         },
         {
-          "command": "wizInstruction.newFile",
+          "command": "wizCopilot.refresh",
           "when": "view == wizInstruction",
           "group": "navigation@2"
         },
         {
-          "command": "wizInstruction.newFolder",
+          "command": "wizInstruction.newFile",
           "when": "view == wizInstruction",
           "group": "navigation@3"
         },
         {
-          "command": "wizInstruction.actionMenu",
+          "command": "wizInstruction.newFolder",
           "when": "view == wizInstruction",
           "group": "navigation@4"
+        },
+        {
+          "command": "wizInstruction.actionMenu",
+          "when": "view == wizInstruction",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
