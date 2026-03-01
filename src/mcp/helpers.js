@@ -57,15 +57,14 @@ const methods = {
         return path.join(projectRoot, relativePath);
     },
 
-    /** appPath 해석: 상대경로 → 프로젝트 src 기준 절대경로
-     *  지원 형식:
-     *    절대경로: /opt/app/project/main/src/app/page.home
-     *    src/ 접두사: src/app/page.home, src/route/my-api, src/portal/season/app/login
-     *    src 하위 상대경로: app/page.home, route/my-api, portal/season/app/login
-     *    bare name: page.home → src/app/page.home 자동 탐색
-     *    bare route: my-api → src/route/my-api 자동 탐색
-     *    bare portal: login → src/portal/*/app/login 자동 탐색
-     */
+    // appPath 해석: 상대경로 → 프로젝트 src 기준 절대경로
+    //  지원 형식:
+    //    절대경로: /opt/app/project/main/src/app/page.home
+    //    src/ 접두사: src/app/page.home, src/route/my-api, src/portal/season/app/login
+    //    src 하위 상대경로: app/page.home, route/my-api, portal/season/app/login
+    //    bare name: page.home → src/app/page.home 자동 탐색
+    //    bare route: my-api → src/route/my-api 자동 탐색
+    //    bare portal: login → src/portal/{package}/app/login 자동 탐색
     _resolveAppPath(appPath, workspacePath, projectName) {
         if (!appPath) return appPath;
         if (path.isAbsolute(appPath)) return appPath;
