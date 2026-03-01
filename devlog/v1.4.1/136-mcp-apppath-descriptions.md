@@ -1,4 +1,4 @@
-# 136. MCP appPath 파라미터 설명 보강 (v1.4.0)
+# 136. MCP appPath 파라미터 설명 보강 (v1.4.1)
 
 ## 개요
 MCP 도구의 `appPath` 파라미터 description에 지원 형식 예시를 추가하여 AI agent가 올바른 경로 형식을 사용하도록 안내.

@@ -1,4 +1,4 @@
-# 138. MCP 인스트럭션 도구명 불일치 수정 (v1.4.0)
+# 138. MCP 인스트럭션 도구명 불일치 수정 (v1.4.1)
 
 ## 개요
 `wiz-copilot-instructions/instructions.md` 섹션 3의 MCP 도구 이름을 실제 v3.0 네이밍과 일치하도록 전면 업데이트.

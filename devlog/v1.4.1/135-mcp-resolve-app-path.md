@@ -1,4 +1,4 @@
-# 135. MCP `_resolveAppPath` 경로 해석 개선 (v1.4.0)
+# 135. MCP `_resolveAppPath` 경로 해석 개선 (v1.4.1)
 
 ## 개요
 MCP 도구의 `appPath` 파라미터 경로 해석 로직을 개선하여 bare app name(예: `page.agent`)을 포함한 다양한 형식을 지원하도록 수정.
