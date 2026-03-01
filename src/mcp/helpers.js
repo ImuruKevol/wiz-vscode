@@ -57,19 +57,68 @@ const methods = {
         return path.join(projectRoot, relativePath);
     },
 
-    /** appPath 해석: 상대경로 → 프로젝트 src 기준 절대경로 */
+    /** appPath 해석: 상대경로 → 프로젝트 src 기준 절대경로
+     *  지원 형식:
+     *    절대경로: /opt/app/project/main/src/app/page.home
+     *    src/ 접두사: src/app/page.home, src/route/my-api, src/portal/season/app/login
+     *    src 하위 상대경로: app/page.home, route/my-api, portal/season/app/login
+     *    bare name: page.home → src/app/page.home 자동 탐색
+     *    bare route: my-api → src/route/my-api 자동 탐색
+     *    bare portal: login → src/portal/*/app/login 자동 탐색
+     */
     _resolveAppPath(appPath, workspacePath, projectName) {
         if (!appPath) return appPath;
         if (path.isAbsolute(appPath)) return appPath;
         const ws = workspacePath || this.wizRoot;
         const pn = projectName || this.currentProject;
         const projectRoot = path.join(ws, 'project', pn);
+        const srcPath = path.join(projectRoot, 'src');
+
+        // src/ 접두사: 프로젝트 루트에 합침
         if (appPath.startsWith('src/') || appPath.startsWith('src\\')) {
             return path.join(projectRoot, appPath);
         }
+
+        // 프로젝트 루트 기준 직접 경로 (app/page.home, route/my-api 등)
         const directPath = path.join(projectRoot, appPath);
         if (fs.existsSync(directPath)) return directPath;
-        return path.join(projectRoot, 'src', appPath);
+
+        // src 하위 상대경로 (app/page.home, route/my-api, portal/season/app/login 등)
+        const srcRelPath = path.join(srcPath, appPath);
+        if (fs.existsSync(srcRelPath)) return srcRelPath;
+
+        // bare name 자동 탐색: src/app/{appPath}
+        const appDirPath = path.join(srcPath, 'app', appPath);
+        if (fs.existsSync(appDirPath)) return appDirPath;
+
+        // bare name 자동 탐색: src/route/{appPath}
+        const routeDirPath = path.join(srcPath, 'route', appPath);
+        if (fs.existsSync(routeDirPath)) return routeDirPath;
+
+        // {type}.{name} 패턴 감지: src/{type}/{appPath} (예: page.home → src/page/page.home)
+        const dotIdx = appPath.indexOf('.');
+        if (dotIdx > 0) {
+            const typePart = appPath.substring(0, dotIdx);
+            const typeDirPath = path.join(srcPath, typePart, appPath);
+            if (fs.existsSync(typeDirPath)) return typeDirPath;
+        }
+
+        // portal 글로브 탐색: src/portal/*/app/{appPath} 또는 src/portal/*/route/{appPath}
+        const portalDir = path.join(srcPath, 'portal');
+        if (fs.existsSync(portalDir)) {
+            try {
+                const pkgs = fs.readdirSync(portalDir, { withFileTypes: true }).filter(e => e.isDirectory());
+                for (const pkg of pkgs) {
+                    const portalAppPath = path.join(portalDir, pkg.name, 'app', appPath);
+                    if (fs.existsSync(portalAppPath)) return portalAppPath;
+                    const portalRoutePath = path.join(portalDir, pkg.name, 'route', appPath);
+                    if (fs.existsSync(portalRoutePath)) return portalRoutePath;
+                }
+            } catch (e) { /* skip */ }
+        }
+
+        // fallback: src/{appPath}
+        return srcRelPath;
     },
 
     // ==================== Utility Helpers ====================
@@ -97,7 +146,7 @@ const methods = {
         return result;
     },
 
-    _scanApps(dirPath, category) {
+    _scanApps(dirPath, category, srcPath) {
         const apps = [];
         if (!fs.existsSync(dirPath)) return apps;
         try {
@@ -108,8 +157,11 @@ const methods = {
                     if (fs.existsSync(appJsonPath)) {
                         try {
                             const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
-                            const files = fs.readdirSync(path.join(dirPath, entry.name));
-                            apps.push({ name: entry.name, path: path.join(dirPath, entry.name), category, files, ...appJson });
+                            const entryPath = path.join(dirPath, entry.name);
+                            const files = fs.readdirSync(entryPath);
+                            const appData = { name: entry.name, path: entryPath, category, files, ...appJson };
+                            if (srcPath) appData.appPath = path.relative(srcPath, entryPath).replace(/\\/g, '/');
+                            apps.push(appData);
                         } catch (e) { /* skip */ }
                     }
                 }

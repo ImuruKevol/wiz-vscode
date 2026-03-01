@@ -50,14 +50,15 @@ module.exports = {
 
     async packageListApps({ projectName, packageName, appType = 'all' }) {
         const pn = projectName || this.currentProject;
-        const portalPath = path.join(this._getSrcPath(this.wizRoot, pn), 'portal', packageName);
+        const srcPath = this._getSrcPath(this.wizRoot, pn);
+        const portalPath = path.join(srcPath, 'portal', packageName);
         if (!fs.existsSync(portalPath)) throw new Error(`Package '${packageName}' not found`);
         let apps = [];
         if (appType === 'all' || appType === 'app') {
-            apps.push(...this._scanApps(path.join(portalPath, 'app'), `portal/${packageName}`));
+            apps.push(...this._scanApps(path.join(portalPath, 'app'), `portal/${packageName}`, srcPath));
         }
         if (appType === 'all' || appType === 'route') {
-            apps.push(...this._scanApps(path.join(portalPath, 'route'), `portal/${packageName}/route`));
+            apps.push(...this._scanApps(path.join(portalPath, 'route'), `portal/${packageName}/route`, srcPath));
         }
         return this._jsonResult({ packageName, apps, count: apps.length });
     },

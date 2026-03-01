@@ -200,9 +200,10 @@ module.exports = {
         const portalPath = path.join(this._getSrcPath(this.wizRoot, pn), 'portal');
         let portalApps = [];
         if (fs.existsSync(portalPath)) {
+            const srcPath = this._getSrcPath(this.wizRoot, pn);
             for (const pkg of fs.readdirSync(portalPath, { withFileTypes: true }).filter(e => e.isDirectory())) {
-                portalApps.push(...this._scanApps(path.join(portalPath, pkg.name, 'app'), `portal/${pkg.name}`));
-                portalApps.push(...this._scanApps(path.join(portalPath, pkg.name, 'route'), `portal/${pkg.name}/route`));
+                portalApps.push(...this._scanApps(path.join(portalPath, pkg.name, 'app'), `portal/${pkg.name}`, srcPath));
+                portalApps.push(...this._scanApps(path.join(portalPath, pkg.name, 'route'), `portal/${pkg.name}/route`, srcPath));
             }
         }
         const allApps = [...sourceApps, ...portalApps];

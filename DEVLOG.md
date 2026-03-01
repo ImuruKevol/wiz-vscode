@@ -11,6 +11,11 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 ### v1.4.0 (Editor Sync, MCP Restructuring & Non-WIZ Support)
 
+- [139](./devlog/v1.4.0/139-mcp-verification-report.md) - MCP 기능 전체 검증 보고서 작성 (54개 도구 전수 검증)
+- [138](./devlog/v1.4.0/138-mcp-instructions-tool-names.md) - MCP 인스트럭션 도구명 불일치 수정 (~30건 v3.0 네이밍 반영)
+- [137](./devlog/v1.4.0/137-mcp-list-apppath-field.md) - MCP list 도구 appPath 상대경로 필드 추가
+- [136](./devlog/v1.4.0/136-mcp-apppath-descriptions.md) - MCP appPath 파라미터 설명 보강 (16개 도구 형식 예시)
+- [135](./devlog/v1.4.0/135-mcp-resolve-app-path.md) - MCP _resolveAppPath 경로 해석 개선 (10단계 탐색)
 - [134](./devlog/v1.4.0/134-non-wiz-recognition-fix.md) - 비-WIZ 프로젝트 인식 로직 재점검 (기본값 false, 조건 강화, 초기 컨텍스트)
 - [133](./devlog/v1.4.0/133-non-wiz-view-improvement.md) - 비-WIZ 프로젝트 뷰 개선 (Info 뷰 README+version, Explorer 메시지 개선)
 - [132](./devlog/v1.4.0/132-task-instruction-improvement.md) - 작업 관리 인스트럭션 적용 기능 개선 (프롬프트 상세화, 즉시 정리 원칙 등)

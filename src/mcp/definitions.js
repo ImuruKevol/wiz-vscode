@@ -332,7 +332,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path (absolute or relative like "src/app/page.home", "app/page.home")' }
+                        appPath: { type: 'string', description: 'App folder path. Supported formats: "page.home" (bare name, auto-resolved), "app/page.home", "src/app/page.home", "route/my-api" (absolute paths also accepted)' }
                     },
                     required: ['appPath']
                 }
@@ -375,7 +375,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' },
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "src/app/page.home", "route/my-api")' },
                         updates: { type: 'object', description: 'Key-value pairs to merge into app.json' }
                     },
                     required: ['appPath', 'updates']
@@ -387,7 +387,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path to delete' }
+                        appPath: { type: 'string', description: 'App folder path to delete (e.g., "page.home", "app/page.home", "route/my-api")' }
                     },
                     required: ['appPath']
                 }
@@ -398,7 +398,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' }
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "route/my-api")' }
                     },
                     required: ['appPath']
                 }
@@ -409,7 +409,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' },
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "route/my-api")' },
                         fileName: { type: 'string', description: 'File name to read (e.g., "view.html", "api.py")' },
                         startLine: { type: 'number', description: 'Start line (1-based)' },
                         endLine: { type: 'number', description: 'End line (1-based, inclusive)' }
@@ -423,7 +423,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' },
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "route/my-api")' },
                         fileName: { type: 'string', description: 'File name to write (e.g., "view.html", "api.py")' },
                         content: { type: 'string', description: 'Content to write' }
                     },
@@ -436,7 +436,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' },
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "route/my-api")' },
                         fileName: { type: 'string', description: 'File name to delete' }
                     },
                     required: ['appPath', 'fileName']
@@ -448,7 +448,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'App folder path' },
+                        appPath: { type: 'string', description: 'App folder path (e.g., "page.home", "app/page.home", "route/my-api")' },
                         oldName: { type: 'string', description: 'Current file name' },
                         newName: { type: 'string', description: 'New file name' }
                     },
@@ -531,7 +531,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path (absolute or relative like "src/portal/season/app/login")' }
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "login" (bare name, auto-resolved in portal), "portal/season/app/login", "src/portal/season/app/login")' }
                     },
                     required: ['appPath']
                 }
@@ -573,7 +573,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' },
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "src/portal/season/app/login", "login")' },
                         updates: { type: 'object', description: 'Key-value pairs to merge into app.json' }
                     },
                     required: ['appPath', 'updates']
@@ -585,7 +585,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path to delete' }
+                        appPath: { type: 'string', description: 'Portal app folder path to delete (e.g., "portal/season/app/login", "login")' }
                     },
                     required: ['appPath']
                 }
@@ -596,7 +596,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' }
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "login")' }
                     },
                     required: ['appPath']
                 }
@@ -607,7 +607,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' },
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "login")' },
                         fileName: { type: 'string', description: 'File name to read' },
                         startLine: { type: 'number', description: 'Start line (1-based)' },
                         endLine: { type: 'number', description: 'End line (1-based, inclusive)' }
@@ -621,7 +621,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' },
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "login")' },
                         fileName: { type: 'string', description: 'File name to write' },
                         content: { type: 'string', description: 'Content to write' }
                     },
@@ -634,7 +634,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' },
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "login")' },
                         fileName: { type: 'string', description: 'File name to delete' }
                     },
                     required: ['appPath', 'fileName']
@@ -646,7 +646,7 @@ module.exports = {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        appPath: { type: 'string', description: 'Portal app folder path' },
+                        appPath: { type: 'string', description: 'Portal app folder path (e.g., "portal/season/app/login", "login")' },
                         oldName: { type: 'string', description: 'Current file name' },
                         newName: { type: 'string', description: 'New file name' }
                     },

@@ -24,7 +24,7 @@ module.exports = {
         const appDir = path.join(srcPath, 'app');
         if (fs.existsSync(appDir)) {
             for (const type of types.filter(t => t !== 'route')) {
-                const apps = this._scanApps(appDir, type).filter(a => a.name.startsWith(`${type}.`));
+                const apps = this._scanApps(appDir, type, srcPath).filter(a => a.name.startsWith(`${type}.`));
                 allApps.push(...apps);
             }
             const seen = new Set();
@@ -33,10 +33,10 @@ module.exports = {
         // src/{type}/ directories
         for (const type of types.filter(t => t !== 'route')) {
             const typeDir = path.join(srcPath, type);
-            if (fs.existsSync(typeDir)) allApps.push(...this._scanApps(typeDir, type));
+            if (fs.existsSync(typeDir)) allApps.push(...this._scanApps(typeDir, type, srcPath));
         }
         // src/route/
-        if (types.includes('route')) allApps.push(...this._scanApps(path.join(srcPath, 'route'), 'route'));
+        if (types.includes('route')) allApps.push(...this._scanApps(path.join(srcPath, 'route'), 'route', srcPath));
 
         return this._jsonResult({ apps: allApps, count: allApps.length });
     },
