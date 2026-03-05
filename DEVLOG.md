@@ -9,6 +9,10 @@ Wiz Framework 프로젝트를 위한 VS Code 익스텐션 개발 이력입니다
 
 > 각 작업의 상세 내용은 [devlog/](./devlog/) 디렉토리의 개별 파일을 참고하세요.
 
+### v1.4.2 (TODO/Memo Viewer Cache Sync Fix)
+
+- [140](./devlog/v1.4.2/140-todo-viewer-cache-sync-fix.md) - TODO/메모 뷰어 캐시 동기화 문제 해결 (FileSystemWatcher + 디스크 우선 읽기)
+
 ### v1.4.1 (MCP appPath Resolution & Verification)
 
 - [139](./devlog/v1.4.1/139-mcp-verification-report.md) - MCP 기능 전체 검증 보고서 작성 (54개 도구 전수 검증)

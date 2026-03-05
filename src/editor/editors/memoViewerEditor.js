@@ -91,30 +91,64 @@ class MemoViewerEditor extends EditorBase {
             vscode.workspace.onDidSaveTextDocument((doc) => {
                 if (this._isSaving) return;
                 if (doc.uri.fsPath !== this.memoFilePath) return;
-                const content = this.loadMemoContent();
+                const content = this.loadMemoContentFromDisk();
                 this.postMessage({ command: 'refreshContent', content });
             })
         );
 
-        // 패널 가시성 변경 시 최신화 (탭 전환 복귀 시)
+        // FileSystemWatcher — 외부 프로세스(git, Copilot, 터미널 등)에 의한 파일 변경 감지
+        const fsWatcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(path.dirname(this.memoFilePath), path.basename(this.memoFilePath))
+        );
+        const fsWatcherHandler = () => {
+            if (this._isSaving) return;
+            if (this._refreshDebounceTimer) clearTimeout(this._refreshDebounceTimer);
+            this._refreshDebounceTimer = setTimeout(() => {
+                const content = this.loadMemoContentFromDisk();
+                this.postMessage({ command: 'refreshContent', content });
+            }, 300);
+        };
+        this._disposables.push(
+            fsWatcher,
+            fsWatcher.onDidChange(fsWatcherHandler),
+            fsWatcher.onDidCreate(fsWatcherHandler),
+            fsWatcher.onDidDelete(fsWatcherHandler)
+        );
+
+        // 패널 가시성 변경 시 최신화 (탭 전환 복귀 시) — 디스크 우선 읽기
         this.panel.onDidChangeViewState(() => {
             if (this.panel && this.panel.visible && !this._isSaving) {
-                const content = this.loadMemoContent();
+                const content = this.loadMemoContentFromDisk();
                 this.postMessage({ command: 'refreshContent', content });
             }
         });
     }
 
-    loadMemoContent() {
+    /**
+     * 디스크 파일을 직접 읽어 최신 내용 반환 (외부 변경 감지, 탭 복귀 시 사용)
+     * VS Code 버퍼 캐시를 무시하고 항상 디스크의 실제 내용을 반환
+     */
+    loadMemoContentFromDisk() {
         try {
-            // VS Code에서 열린 문서가 있으면 버퍼 내용 우선 사용 (미저장 변경 포함)
-            const openDoc = vscode.workspace.textDocuments.find(
-                doc => doc.uri.fsPath === this.memoFilePath
-            );
-            if (openDoc) return openDoc.getText();
             if (fs.existsSync(this.memoFilePath)) {
                 return fs.readFileSync(this.memoFilePath, 'utf8');
             }
+        } catch (e) { /* ignore */ }
+        return '';
+    }
+
+    /**
+     * VS Code에서 열린 문서 버퍼 우선 사용 (에디터 실시간 편집 반영용)
+     * 열린 문서가 dirty 상태가 아니면 디스크 우선 읽기로 폴백
+     */
+    loadMemoContent() {
+        try {
+            const openDoc = vscode.workspace.textDocuments.find(
+                doc => doc.uri.fsPath === this.memoFilePath
+            );
+            // 열린 문서가 dirty(미저장 편집 중)일 때만 버퍼 사용
+            if (openDoc && openDoc.isDirty) return openDoc.getText();
+            return this.loadMemoContentFromDisk();
         } catch (e) { /* ignore */ }
         return '';
     }
